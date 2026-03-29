@@ -1,0 +1,140 @@
+
+.registration-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.20);
+}
+
+.registration-card {
+    width: 100%;
+    max-width: 25em;
+    background: rgba(255, 2090, 115 ,0.7);
+    backdrop-filter: blur(6px);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+}
+
+.registration-header {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.icon-box {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 10px;
+    background: linear-gradient(to bottom right, #2563eb, #4f46e5);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon {
+    color: white;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+}
+
+.registration-header h1 {
+    font-size: 24px;
+    margin: 8px 0;
+    color: crimson;
+}
+
+.registration-header p {
+    color: darkblue;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.registration-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: darkblue;
+
+}
+
+.input-wrapper {
+    position: relative;
+    width: 22.5em;
+}
+
+.input-icon {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 16px;
+    height: 16px;
+    color: #aaa;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 10px 10px 10px 34px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+    color: black;
+    background-color: white;
+}
+
+.input-wrapper input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.registration-button {
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    background: linear-gradient(to left, #dc143c, #dc143c);
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+.registration-button:hover {
+    background: linear-gradient(to left, #dc143c, #dc143c);
+}
+
+.footer-text {
+    font-weight: 500;
+    text-align: center;
+    font-size: 14px;
+    margin-top: 10px;
+    color: black;
+}
+
+.footer-text a {
+    color: crimson;
+    text-decoration: none;
+    font-weight: 600;
+
+}
+
+.footer-text a:hover {
+    text-decoration: underline;
+}
