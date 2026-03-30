@@ -1,35 +1,52 @@
-
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
-import UpBackground from "../assets/UpBackground.png";
-import UpIcon from "../assets/UpIcon.png"
-import "../css/Login.css"
+import UpIcon from "../assets/UpIcon.png";
+import "../css/Login.css";
 
 export function Login() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email && password) {
+
+        if (!email || !password) return;
+
+        try {
+        const response = await fetch("http://localhost:5000/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            setError(data.message || "Login failed");
+            return;
+        }
+
+        const data = await response.json();
+        console.log("Login successful", data);
+
+        // Redirect to dashboard
         navigate("/dashboard");
+        } catch (err) {
+        console.error("Login error:", err);
+        setError("Server unreachable or network error");
         }
     };
 
     return (
-    <div className="login-page">
+        <div className="login-page">
         <div className="overlay" />
 
         <div className="login-card">
             <div className="login-header">
             <div className="icon-box">
-                <img 
-                    src={UpIcon} 
-                    alt="Up Icon" 
-                    className="icon" 
-                />
+                <img src={UpIcon} alt="Up Icon" className="icon" />
             </div>
             <h1>Adventure Awaits</h1>
             <p>Reach New Heights One Task at a Time</p>
@@ -66,18 +83,17 @@ export function Login() {
                 </div>
             </div>
 
+            {error && <p className="error-text">{error}</p>}
+
             <button type="submit" className="login-button">
                 Sign In
             </button>
             </form>
 
             <p className="footer-text">
-                Don't have an account? <a href="/registration">Create one</a>
-
+            Don't have an account? <a href="/registration">Create one</a>
             </p>
         </div>
         </div>
     );
 }
-
-

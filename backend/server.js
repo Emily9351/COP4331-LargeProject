@@ -9,26 +9,32 @@ app.use(express.json());
 
 connectDB();
 
-// Registration endpoint
-app.post("/api/register", async (req, res) => 
-{
-  try 
-    {
-    const { name, email, password } = req.body;
+const bcrypt = require("bcrypt");
+
+app.post("/api/register", async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
 
     let user = await User.findOne({ email });
-    if (user) 
-    {
+    if (user) {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     user = new User({
-      name,         
-      email,        
-      passwordHash: password 
+      name,
+      email,
+      passwordHash: hashedPassword,
+      role: role === "professor" ? "professor" : "student"
     });
 
     await user.save();
+
     res.status(201).json({ message: "User registered successfully!" });
 
   } catch (error) {
@@ -46,14 +52,13 @@ app.post("/api/login", async (req, res) =>
     const user = await User.findOne({ email });
     if (!user) 
     {
+      console.log("User not found");
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    if (password !== user.passwordHash) 
-    {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
- 
+    const isMatch = await bcrypt.compare(password, user.passwordHash);  
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
     res.status(200).json({ message: "Login successful!", userId: user._id });
 
   } 

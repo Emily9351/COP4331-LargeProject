@@ -13,10 +13,29 @@ export function Registration() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleregistration = (e: React.FormEvent) => {
+    const handleregistration = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email && password) {
-            navigate("/registration");
+
+        try {
+            const name = `${firstName} ${lastName}`;
+
+            const response = await fetch("http://localhost:5000/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password }),
+            });
+
+            if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || "Registration failed");
+            }
+
+            const data = await response.json();
+            alert("Registration successful!");
+            navigate("/"); // go to login
+        } catch (error: any) {
+            console.error("Registration error:", error);
+            alert(error.message);
         }
     };
 
@@ -46,7 +65,7 @@ export function Registration() {
                 <Mail className="input-icon" />
                 <input
                     id="firstname"
-                    type="firstname"
+                    type="text"
                     placeholder="Enter your first name"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
@@ -60,7 +79,7 @@ export function Registration() {
                 <Mail className="input-icon" />
                 <input
                     id="lastname"
-                    type="lastname"
+                    type="text"
                     placeholder="Enter your last name"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
