@@ -14,29 +14,29 @@ export function Registration() {
     const [password, setPassword] = useState("");
 
     const handleregistration = async (e: React.FormEvent) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        try {
-            const name = `${firstName} ${lastName}`;
+    try {
+        const name = `${firstName} ${lastName}`;
 
-            const response = await fetch("http://167.99.63.238:5000/api/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password }),
-            });
+        const response = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+        });
 
-            if (!response.ok) {
-            const text = await response.text();
-            throw new Error(text || "Registration failed");
-            }
-
-            const data = await response.json();
-            alert("Registration successful!");
-            navigate("/"); // go to login
-        } catch (error: any) {
-            console.error("Registration error:", error);
-            alert(error.message);
+        if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Registration failed");
         }
+
+        const data = await response.json();
+        alert("Registration successful!");
+        navigate("/"); // go to login
+    } catch (error: any) {
+        console.error("Registration error:", error);
+        alert(error.message);
+    }
     };
 
     return (
