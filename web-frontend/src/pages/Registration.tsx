@@ -30,7 +30,6 @@ export function Registration() {
         throw new Error(text || "Registration failed");
         }
 
-        const data = await response.json();
         alert("Registration successful!");
         navigate("/"); // go to login
     } catch (error: any) {
