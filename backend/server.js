@@ -6,17 +6,16 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const { User } = require("./models");
 const bcrypt = require("bcrypt");
+const sendVerificationEmail = require("./utils/SendVerificationEmail");
 
 const app = express();
 
-// 1️⃣ Middleware
 app.use(cors({ origin: "http://localhost:5173" }));
-app.use(express.json()); // MUST be before API routes
-
+app.use(express.json());
 
 connectDB();
 
-// 3️⃣ API Routes
+// REGISTER
 app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -30,20 +29,57 @@ app.post("/api/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationCodeExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+
     user = new User({
       name,
       email,
       passwordHash: hashedPassword,
       role: role === "professor" ? "professor" : "student",
+      verificationCode,
+      verificationCodeExpires,
     });
 
     await user.save();
-    res.status(201).json({ message: "User registered successfully!" });
+    await sendVerificationEmail(email, verificationCode);
+
+    res.status(201).json({ message: "Check your email for a verification code.", userId: user._id });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
+// VERIFY EMAIL
+app.post("/api/verify-email", async (req, res) => {
+  try {
+    const { userId, code } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.isVerified) return res.status(400).json({ message: "Already verified" });
+
+    if (user.verificationCode !== code) {
+      return res.status(400).json({ message: "Invalid code" });
+    }
+
+    if (user.verificationCodeExpires < new Date()) {
+      return res.status(400).json({ message: "Code has expired, please register again" });
+    }
+
+    user.isVerified = true;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Email verified successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// LOGIN
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -54,13 +90,17 @@ app.post("/api/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "Please verify your email before logging in" });
+    }
+
     res.status(200).json({ message: "Login successful!", userId: user._id });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
-// 4️⃣ Frontend static files
+// Frontend static files
 const buildPath = path.join(__dirname, "..", "web-frontend", "dist");
 const indexPath = path.join(buildPath, "index.html");
 
@@ -71,11 +111,9 @@ if (!fs.existsSync(buildPath) || !fs.existsSync(indexPath)) {
 
 app.use(express.static(buildPath));
 
-// Catch-all for SPA routes (everything not /api goes to index.html)
 app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(indexPath);
 });
 
-// 5️⃣ Start server
 const PORT = process.env.PORT || 80;
 app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
