@@ -19,7 +19,7 @@ export function Registration() {
         try {
             const name = `${firstName} ${lastName}`;
 
-            const response = await fetch("http://localhost:5000/api/register", {
+            const response = await fetch("http://167.99.63.238:5000/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, email, password }),
