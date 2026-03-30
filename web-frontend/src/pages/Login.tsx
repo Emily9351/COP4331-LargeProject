@@ -1,74 +1,91 @@
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
-import UpIcon from "../assets/UpIcon.png";
-import "../css/Login.css";
+import UpBackground from "../assets/UpBackground.png";
+import UpIcon from "../assets/UpIcon.png"
+import "../css/Registration.css"
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export function Login() {
+export function Registration() {
     const navigate = useNavigate();
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [emailError, setEmailError] = useState("");
 
-    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setEmail(value);
-        if (value && !EMAIL_REGEX.test(value)) {
-            setEmailError("Please enter a valid email address");
-        } else {
-            setEmailError("");
-        }
-    };
-
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleregistration = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!email || !password) return;
-
-        if (!EMAIL_REGEX.test(email)) {
-            setEmailError("Please enter a valid email address");
-            return;
-        }
-
         try {
-            const response = await fetch("/api/login", {
+            const name = `${firstName} ${lastName}`;
+
+            const response = await fetch("/api/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ name, email, password }),
             });
 
             if (!response.ok) {
-                const data = await response.json();
-                setError(data.message || "Login failed");
-                return;
+                const text = await response.text();
+                throw new Error(text || "Registration failed");
             }
 
-            const data = await response.json();
-            console.log("Login successful", data);
-            navigate("/dashboard");
-        } catch (err) {
-            console.error("Login error:", err);
-            setError("Server unreachable or network error");
+            alert("Registration successful!");
+            navigate("/"); // go to login
+        } catch (error: any) {
+            console.error("Registration error:", error);
+            alert(error.message);
         }
     };
 
     return (
-        <div className="login-page">
+        <div className="registration-page"
+            style={{ backgroundImage: `url(${UpBackground})` }}
+        >
             <div className="overlay" />
 
-            <div className="login-card">
-                <div className="login-header">
+            <div className="registration-card">
+                <div className="registration-header">
                     <div className="icon-box">
-                        <img src={UpIcon} alt="Up Icon" className="icon" />
+                        <img
+                            src={UpIcon}
+                            alt="Up Icon"
+                            className="icon"
+                        />
                     </div>
                     <h1>Adventure Awaits</h1>
                     <p>Reach New Heights One Task at a Time</p>
                 </div>
 
-                <form onSubmit={handleLogin} className="login-form">
+                <form onSubmit={handleregistration} className="registration-form">
+                    <div className="input-group">
+                        <label htmlFor="firstName">First Name</label>
+                        <div className="input-wrapper">
+                            <Mail className="input-icon" />
+                            <input
+                                id="firstname"
+                                type="text"
+                                placeholder="Enter your first name"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="input-group">
+                        <label htmlFor="lastName">Last Name</label>
+                        <div className="input-wrapper">
+                            <Mail className="input-icon" />
+                            <input
+                                id="lastname"
+                                type="text"
+                                placeholder="Enter your last name"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
                     <div className="input-group">
                         <label htmlFor="email">Email</label>
                         <div className="input-wrapper">
@@ -78,11 +95,10 @@ export function Login() {
                                 type="email"
                                 placeholder="Enter your email"
                                 value={email}
-                                onChange={handleEmailChange}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
                         </div>
-                        {emailError && <p className="error-text">{emailError}</p>}
                     </div>
 
                     <div className="input-group">
@@ -100,15 +116,14 @@ export function Login() {
                         </div>
                     </div>
 
-                    {error && <p className="error-text">{error}</p>}
-
-                    <button type="submit" className="login-button">
+                    <button type="submit" className="registration-button">
                         Sign In
                     </button>
                 </form>
 
                 <p className="footer-text">
-                    Don't have an account? <a href="/registration">Create one</a>
+                    Already have an account?{" "}
+                    <Link to="/">Login</Link>
                 </p>
             </div>
         </div>
