@@ -60,6 +60,63 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+///User APIs
+app.get("/api/users/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select("-passwordHash")
+      .populate("enrolledClasses", "courseCode title semester section");
+
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+app.put("/api/users/:id", async (req, res) => {
+  try {
+    const { name, email, profilePictureUrl } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { name, email, profilePictureUrl },
+      { new: true, runValidators: true }
+    ).select("-passwordHash");
+
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+app.delete("/api/users/:id", async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+    
+
+    if(user.enrolledClasses && user.enrolledClasses.length > 0){
+      await Class.updateMany(
+        { studentIds: req.params.id },
+        { $pull: { studentIds: req.params.id } }
+      );
+    }
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+
+
 // 4️⃣ Frontend static files
 const buildPath = path.join(__dirname, "..", "web-frontend", "dist");
 const indexPath = path.join(buildPath, "index.html");
@@ -77,5 +134,5 @@ app.get(/^\/(?!api).*/, (req, res) => {
 });
 
 // 5️⃣ Start server
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
