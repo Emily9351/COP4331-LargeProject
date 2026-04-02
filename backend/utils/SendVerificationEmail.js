@@ -3,21 +3,25 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: "adnan400283@gmail.com",
+        pass: "idchvrimzownatsa",  // app password with spaces removed
     },
 });
 
 async function sendVerificationEmail(toEmail, code) {
     await transporter.sendMail({
-        from: `"Adventure Awaits" <${process.env.EMAIL_USER}>`,
+        from: '"Study App" <adnan400283@gmail.com>',
         to: toEmail,
-        subject: "Verify your email",
+        subject: "Your Verification Code",
         html: `
-      <h2>Welcome to Adventure Awaits!</h2>
-      <p>Your verification code is:</p>
-      <h1 style="letter-spacing: 8px;">${code}</h1>
-      <p>This code expires in 15 minutes.</p>
+      <div style="font-family: sans-serif; max-width: 400px; margin: auto;">
+        <h2>Email Verification</h2>
+        <p>Use the code below to verify your account. It expires in 15 minutes.</p>
+        <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 24px 0;">
+          ${code}
+        </div>
+        <p style="color: #888; font-size: 12px;">If you didn't request this, ignore this email.</p>
+      </div>
     `,
     });
 }

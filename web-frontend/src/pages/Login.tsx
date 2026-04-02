@@ -1,91 +1,58 @@
-
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
-import UpBackground from "../assets/UpBackground.png";
-import UpIcon from "../assets/UpIcon.png"
-import "../css/Registration.css"
+import UpIcon from "../assets/UpIcon.png";
+import "../css/Login.css";
 
-export function Registration() {
+export function Login() {
     const navigate = useNavigate();
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
 
-    const handleregistration = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        try {
-            const name = `${firstName} ${lastName}`;
+        if (!email || !password) return;
 
-            const response = await fetch("/api/register", {
+        try {
+            const response = await fetch("/api/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({ email, password }),
             });
 
             if (!response.ok) {
-                const text = await response.text();
-                throw new Error(text || "Registration failed");
+                const data = await response.json();
+                setError(data.message || "Login failed");
+                return;
             }
 
-            alert("Registration successful!");
-            navigate("/"); // go to login
-        } catch (error: any) {
-            console.error("Registration error:", error);
-            alert(error.message);
+            const data = await response.json();
+            console.log("Login successful", data);
+
+            // Redirect to dashboard
+            navigate("/dashboard");
+        } catch (err) {
+            console.error("Login error:", err);
+            setError("Server unreachable or network error");
         }
     };
 
     return (
-        <div className="registration-page"
-            style={{ backgroundImage: `url(${UpBackground})` }}
-        >
+        <div className="login-page">
             <div className="overlay" />
 
-            <div className="registration-card">
-                <div className="registration-header">
+            <div className="login-card">
+                <div className="login-header">
                     <div className="icon-box">
-                        <img
-                            src={UpIcon}
-                            alt="Up Icon"
-                            className="icon"
-                        />
+                        <img src={UpIcon} alt="Up Icon" className="icon" />
                     </div>
                     <h1>Adventure Awaits</h1>
                     <p>Reach New Heights One Task at a Time</p>
                 </div>
 
-                <form onSubmit={handleregistration} className="registration-form">
-                    <div className="input-group">
-                        <label htmlFor="firstName">First Name</label>
-                        <div className="input-wrapper">
-                            <Mail className="input-icon" />
-                            <input
-                                id="firstname"
-                                type="text"
-                                placeholder="Enter your first name"
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div className="input-group">
-                        <label htmlFor="lastName">Last Name</label>
-                        <div className="input-wrapper">
-                            <Mail className="input-icon" />
-                            <input
-                                id="lastname"
-                                type="text"
-                                placeholder="Enter your last name"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
+                <form onSubmit={handleLogin} className="login-form">
                     <div className="input-group">
                         <label htmlFor="email">Email</label>
                         <div className="input-wrapper">
@@ -116,14 +83,15 @@ export function Registration() {
                         </div>
                     </div>
 
-                    <button type="submit" className="registration-button">
+                    {error && <p className="error-text">{error}</p>}
+
+                    <button type="submit" className="login-button">
                         Sign In
                     </button>
                 </form>
 
                 <p className="footer-text">
-                    Already have an account?{" "}
-                    <Link to="/">Login</Link>
+                    Don't have an account? <a href="/registration">Create one</a>
                 </p>
             </div>
         </div>
