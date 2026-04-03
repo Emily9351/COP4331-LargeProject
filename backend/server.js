@@ -1,3 +1,4 @@
+require("dotenv").config();
 const path = require("path");
 const fs = require("fs");
 const express = require("express");
@@ -5,13 +6,14 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const { User } = require("./models");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const sendVerificationEmail = require("./utils/SendVerificationEmail");
+const sendPasswordResetEmail = require("./utils/SendPasswordResetEmail");
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors());
 app.use(express.json());
-
 
 
 connectDB();
@@ -96,6 +98,77 @@ app.post("/api/login", async (req, res) => {
     }
 
     res.status(200).json({ message: "Login successful!", userId: user._id });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// FORGOT PASSWORD
+app.post("/api/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal whether user exists for security
+      return res.status(200).json({ message: "If that email exists, a reset link has been sent." });
+    }
+
+    // Generate secure reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = resetTokenExpires;
+    await user.save();
+
+    // Send the password reset email
+    const emailResult = await sendPasswordResetEmail(email, resetToken);
+    
+    if (!emailResult || !emailResult.success) {
+      console.error("❌ Failed to send reset email, but returning success to user for security");
+      // Still return success for security (don't reveal if email exists)
+      // But log the actual error for debugging
+    }
+
+    res.status(200).json({ message: "If that email exists, a reset link has been sent." });
+  } catch (error) {
+    console.error("❌ Forgot password error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// RESET PASSWORD
+app.post("/api/reset-password", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token and new password are required" });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.passwordHash = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful! You can now log in." });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
