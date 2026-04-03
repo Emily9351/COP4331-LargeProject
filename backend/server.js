@@ -126,10 +126,18 @@ app.post("/api/forgot-password", async (req, res) => {
     user.resetPasswordExpires = resetTokenExpires;
     await user.save();
 
-    await sendPasswordResetEmail(email, resetToken);
+    // Send the password reset email
+    const emailResult = await sendPasswordResetEmail(email, resetToken);
+    
+    if (!emailResult || !emailResult.success) {
+      console.error("❌ Failed to send reset email, but returning success to user for security");
+      // Still return success for security (don't reveal if email exists)
+      // But log the actual error for debugging
+    }
 
     res.status(200).json({ message: "If that email exists, a reset link has been sent." });
   } catch (error) {
+    console.error("❌ Forgot password error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
