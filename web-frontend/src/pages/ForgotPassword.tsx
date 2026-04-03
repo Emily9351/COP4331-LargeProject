@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Mail } from "lucide-react";
 import UpIcon from "../assets/UpIcon.png";
 import "../css/Login.css";
 
 export function ForgotPassword() {
-    const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
