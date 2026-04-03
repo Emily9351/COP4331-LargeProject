@@ -13,7 +13,6 @@ const UserSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      // Basic email format validation
       match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
     },
     passwordHash: {
@@ -34,6 +33,16 @@ const UserSchema = new mongoose.Schema(
     profilePictureUrl: {
       type: String,
       default: "",
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationCode: {
+      type: String,
+    },
+    verificationCodeExpires: {
+      type: Date,
     },
   },
   { timestamps: true },
