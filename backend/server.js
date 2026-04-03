@@ -12,12 +12,14 @@ const sendPasswordResetEmail = require("./utils/SendPasswordResetEmail");
 
 const app = express();
 
-// CORS configuration
+// CORS configuration - Allow both local dev and production
 const allowedOrigins = [
-  'http://localhost:5173',           // Local Vite dev server
-  'http://localhost:5000',           // Local production
-  'https://emilydensmore.com',       // Production domain
-  'http://emilydensmore.com',        // Production domain (HTTP)
+  'http://localhost:5173',              // Local Vite dev server
+  'http://localhost:5000',              // Local production
+  'https://emilydensmore.com:5000',     // Production with port
+  'http://emilydensmore.com:5000',      // Production HTTP with port
+  'https://emilydensmore.com',          // Production (in case you get port 443 later)
+  'http://emilydensmore.com',           // Production HTTP (in case you get port 80 later)
 ];
 
 app.use(cors({
