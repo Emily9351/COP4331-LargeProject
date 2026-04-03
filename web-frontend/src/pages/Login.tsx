@@ -88,6 +88,10 @@ export function Login() {
                     <button type="submit" className="login-button">
                         Sign In
                     </button>
+
+                    <p className="forgot-password-link">
+                        <a href="/forgot-password">Forgot password?</a>
+                    </p>
                 </form>
 
                 <p className="footer-text">
