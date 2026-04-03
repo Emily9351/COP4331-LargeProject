@@ -12,7 +12,29 @@ const sendPasswordResetEmail = require("./utils/SendPasswordResetEmail");
 
 const app = express();
 
-app.use(cors());
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',           // Local Vite dev server
+  'http://localhost:5000',           // Local production
+  'https://emilydensmore.com',       // Production domain
+  'http://emilydensmore.com',        // Production domain (HTTP)
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, Postman, or same-origin)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(null, true); // Allow for now, can change to false for strict mode
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 
 
