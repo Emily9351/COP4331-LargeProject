@@ -1,26 +1,19 @@
 require("dotenv").config();
-const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 
-// Use environment variables or fallback to existing values
-const transporter = nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE || "gmail",
-    auth: {
-        user: process.env.EMAIL_USER || "adnan400283@gmail.com",
-        pass: process.env.EMAIL_PASS || "idchvrimzownatsa",
-    },
-});
+// Configure SendGrid with API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function sendPasswordResetEmail(toEmail, resetToken) {
     // Use environment variable for frontend URL or fallback
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
     
-    try {
-        const info = await transporter.sendMail({
-            from: `"Up To-Do App" <${process.env.EMAIL_USER || "adnan400283@gmail.com"}>`,
-            to: toEmail,
-            subject: "Password Reset Request - Up To-Do App",
-            html: `
+    const msg = {
+        to: toEmail,
+        from: process.env.SENDGRID_FROM_EMAIL || "noreply@yourdomain.com",
+        subject: "Password Reset Request - Up To-Do App",
+        html: `
           <div style="font-family: sans-serif; max-width: 500px; margin: auto;">
             <h2>Password Reset</h2>
             <p>You requested to reset your password. Click the button below to reset it. This link expires in 1 hour.</p>
@@ -36,17 +29,19 @@ async function sendPasswordResetEmail(toEmail, resetToken) {
             <p style="color: #888; font-size: 12px; margin-top: 24px;">If you didn't request this, please ignore this email. Your password will remain unchanged.</p>
           </div>
         `,
-        });
-        
-        console.log("✅ Password reset email sent successfully:", info.messageId);
+    };
+    
+    try {
+        await sgMail.send(msg);
+        console.log("✅ Password reset email sent successfully");
         console.log("   To:", toEmail);
         console.log("   Reset link:", resetLink);
-        return { success: true, messageId: info.messageId };
+        return { success: true };
     } catch (error) {
         console.error("❌ Failed to send password reset email:");
         console.error("   Error:", error.message);
         console.error("   To:", toEmail);
-        console.error("   Email User:", process.env.EMAIL_USER || "adnan400283@gmail.com");
+        console.error("   From Email:", process.env.SENDGRID_FROM_EMAIL || "noreply@yourdomain.com");
         return { success: false, error: error.message };
     }
 }
