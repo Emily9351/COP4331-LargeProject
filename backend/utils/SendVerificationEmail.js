@@ -1,17 +1,13 @@
-const nodemailer = require("nodemailer");
+require("dotenv").config();
+const sgMail = require("@sendgrid/mail");
 
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: "adnan400283@gmail.com",
-        pass: "idchvrimzownatsa",  // app password with spaces removed
-    },
-});
+// Configure SendGrid with API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function sendVerificationEmail(toEmail, code) {
-    await transporter.sendMail({
-        from: '"Study App" <adnan400283@gmail.com>',
+    const msg = {
         to: toEmail,
+        from: process.env.SENDGRID_FROM_EMAIL || "noreply@yourdomain.com",
         subject: "Your Verification Code",
         html: `
       <div style="font-family: sans-serif; max-width: 400px; margin: auto;">
@@ -23,7 +19,17 @@ async function sendVerificationEmail(toEmail, code) {
         <p style="color: #888; font-size: 12px;">If you didn't request this, ignore this email.</p>
       </div>
     `,
-    });
+    };
+
+    try {
+        await sgMail.send(msg);
+        console.log("✅ Verification email sent successfully to:", toEmail);
+    } catch (error) {
+        console.error("❌ Failed to send verification email:");
+        console.error("   Error:", error.message);
+        console.error("   To:", toEmail);
+        throw error;
+    }
 }
 
 module.exports = sendVerificationEmail;
