@@ -7,7 +7,7 @@ const { User } = require("./models");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const sendVerificationEmail = require("./utils/SendVerificationEmail");
-const sendPasswordResetEmail = require("./utils/SendPasswordResetEmailSendGrid");
+const sendPasswordResetEmail = require("./utils/SendPasswordResetEmail");
 
 const app = express();
 
