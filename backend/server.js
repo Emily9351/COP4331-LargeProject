@@ -4,7 +4,7 @@ const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
-const { User, Class, StudyGroup, Task } = require("./models");
+const { User, Class, StudyGroup, Task, Event, RSVP } = require("./models");
 const bcrypt = require("bcrypt");
 
 const app = express();
@@ -60,8 +60,9 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-///USER API
-////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// User API
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //get user
 app.get("/api/users/:id", async (req, res) => {
@@ -126,8 +127,9 @@ app.delete("/api/users/:id", async (req, res) => {
   }
 });
 
-//CLASS API
-/////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Class API
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //create class
 app.post("/api/classes", async (req, res) => {
@@ -282,8 +284,9 @@ app.delete("/api/classes/:id/enroll/:userId", async (req, res) => {
   }
 });
 
-//group
-/////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Study Group API
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Create a group
 app.post("/api/groups", async (req, res) => {
@@ -451,8 +454,9 @@ app.get("/api/classes/:id/groups", async (req, res) => {
   }
 });
 
-//task
-///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Task API
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Create a task
 app.post("/api/tasks", async (req, res) => {
@@ -552,6 +556,247 @@ app.delete("/api/tasks/:id", async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
  
     res.json({ message: "Task deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Event API
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Create an event
+app.post("/api/events", async (req, res) => {
+  try {
+    const { title, description, type, createdBy, classId, studyGroupId, startTime, endTime, location, meetingLink } = req.body;
+ 
+    if (!title || !createdBy || !startTime || !endTime ) 
+      return res.status(400).json({ message: "title, createdBy startTime, endTime are required" });
+
+    const user = await User.findById(createdBy);
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    if (classId) { //make sure the class exists
+      const cls = await Class.findById(classId);
+      if (!cls)
+        return res.status(404).json({ message: "Class not found" });
+    }
+
+    if (studyGroupId) { //make sure the study group exists
+      const group = await StudyGroup.findById(studyGroupId);
+      if (!group)
+        return res.status(404).json({ message: "Study group not found" });
+    }
+ 
+    const event = new Event({
+      title,
+      description: description || null,
+      type: type || "study session",
+      location: location || "",
+      createdBy,
+      classId: classId || null,
+      studyGroupId: studyGroupId || null,
+      startTime,
+      endTime,
+      meetingLink: meetingLink || "",
+    });
+ 
+    await event.save();
+    res.status(201).json(event);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Get all events
+app.get("/api/events", async (req, res) => {
+  try {
+    const { classId, studyGroupId, type } = req.query;
+ 
+    const filter = {};
+    if (classId) filter.classId = classId;
+    if (studyGroupId) filter.studyGroupId = studyGroupId;
+    if (type) filter.type = type;
+ 
+    const events = await Event.find(filter)
+      .populate("createdBy", "name email")
+      .populate("classId", "courseCode title")
+      .populate("studyGroupId", "name")
+      .sort({ startTime: 1 });
+ 
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+ 
+// Get single event
+app.get("/api/events/:id", async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate("createdBy", "name email")
+      .populate("classId", "courseCode title")
+      .populate("studyGroupId", "name");
+ 
+    if (!event)
+      return res.status(404).json({ message: "Event not found" });
+ 
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+ 
+// Update an event
+app.put("/api/events/:id", async (req, res) => {
+  try {
+    const { title, description, type, startTime, endTime, location, meetingLink } = req.body;
+ 
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      { title, description, type, startTime, endTime, location, meetingLink },
+      { new: true }
+    );
+ 
+    if (!event)
+      return res.status(404).json({ message: "Event not found" });
+ 
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+ 
+// Delete an event
+app.delete("/api/events/:id", async (req, res) => {
+  try {
+    const event = await Event.findByIdAndDelete(req.params.id);
+ 
+    if (!event)
+      return res.status(404).json({ message: "Event not found" });
+ 
+    // Cleanup — delete all RSVPs linked to this event
+    await RSVP.deleteMany({ eventId: req.params.id });
+ 
+    res.json({ message: "Event deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+///RSVP API
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// RSVP to an event
+app.post("/api/events/:id/rsvp", async (req, res) => {
+  try {
+    const { userId, status } = req.body;
+ 
+    if (!userId || !status)
+      return res.status(400).json({ message: "userId and status are required" });
+ 
+    if (!["accepted", "declined", "tentative"].includes(status))
+      return res.status(400).json({ message: "status must be accepted, declined, or tentative" });
+ 
+    const event = await Event.findById(req.params.id);
+    if (!event)
+      return res.status(404).json({ message: "Event not found" });
+ 
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+ 
+    // Check if user already RSVPed
+    const existingRsvp = await RSVP.findOne({ userId, eventId: req.params.id });
+    if (existingRsvp)
+      return res.status(400).json({ message: "User has already RSVPed to this event" });
+ 
+    const rsvp = new RSVP({
+      userId,
+      eventId: req.params.id,
+      status,
+      respondedAt: Date.now(),
+    });
+ 
+    await rsvp.save();
+    res.status(201).json({ message: "RSVP confirmed", rsvp });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+ 
+// Update RSVP status
+app.put("/api/events/:id/rsvp/:userId", async (req, res) => {
+  try {
+    const { status } = req.body;
+ 
+    if (!status)
+      return res.status(400).json({ message: "status is required" });
+ 
+    if (!["accepted", "declined", "tentative"].includes(status))
+      return res.status(400).json({ message: "status must be accepted, declined, or tentative" });
+ 
+    const rsvp = await RSVP.findOneAndUpdate(
+      { userId: req.params.userId, eventId: req.params.id },
+      { status, respondedAt: Date.now() },
+      { new: true }
+    );
+ 
+    if (!rsvp)
+      return res.status(404).json({ message: "RSVP not found" });
+ 
+    res.json({ message: "RSVP updated", rsvp });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+ 
+// Cancel an RSVP
+app.delete("/api/events/:id/rsvp/:userId", async (req, res) => {
+  try {
+    const rsvp = await RSVP.findOneAndDelete({
+      userId: req.params.userId,
+      eventId: req.params.id,
+    });
+ 
+    if (!rsvp)
+      return res.status(404).json({ message: "RSVP not found" });
+ 
+    res.json({ message: "RSVP cancelled successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+ 
+// Get all RSVPs for an event
+app.get("/api/events/:id/rsvps", async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event)
+      return res.status(404).json({ message: "Event not found" });
+ 
+    const rsvps = await RSVP.find({ eventId: req.params.id })
+      .populate("userId", "name email");
+ 
+    res.json(rsvps);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Get all events a user RSVPed to
+app.get("/api/users/:id/rsvps", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    const rsvps = await RSVP.find({ userId: req.params.id })
+      .populate("eventId");
+
+    res.json(rsvps);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
