@@ -162,7 +162,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .balloon-cluster {
@@ -174,8 +174,8 @@ html, body {
 }
 
 .balloon {
-  width: 22px;
-  height: 28px;
+  width: 32px;
+  height: 38px;
   border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
   animation: floatBalloon 2s ease-in-out infinite alternate;
 }
@@ -186,12 +186,12 @@ html, body {
 }
 
 .house-emoji {
-  font-size: 3rem;
+  font-size: 7rem;
   line-height: 1;
 }
 
 .balloon-count-label {
-  font-size: 0.875rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #374151;
   margin: 0;
@@ -544,4 +544,274 @@ html, body {
 @keyframes slideInToast {
   from { transform: translateY(20px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
+}
+
+.badge-card header {
+  text-align: center;
+  padding: 1.25rem 1.25rem 0.75rem;
+  background: linear-gradient(to right, #fffbeb, #fefce8);
+}
+
+.badge-card h2 {
+  color: black;
+  margin: 0;
+}
+
+.badge-card .subtitle {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin: 0.25rem 0 0;
+}
+
+.badge-card .header-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.badge-card .award-icon {
+  font-size: 1.25rem;
+}
+
+/* Progress box */
+.sash-progress-box {
+  background: #fefce8;
+  border: 1.5px solid #fde68a;
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  margin: 1rem 1rem 0;
+}
+
+.sash-progress-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.sash-progress-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.sash-progress-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.sash-balloon-icon {
+  font-size: 17px;
+}
+
+.sash-progress-sub {
+  font-size: 12px;
+  color: #a16207;
+  margin: 0 0 8px;
+}
+
+.sash-bar-track {
+  height: 8px;
+  background: #fde68a;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.sash-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #f59e0b, #d97706);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+/* Scout sash body */
+.sash-body {
+  position: relative;
+  background: #7c3f00;
+  border-radius: 12px;
+  margin: 0.875rem 1rem;
+  padding: 1.25rem 1.75rem;
+  overflow: visible;
+}
+
+/* Side tabs */
+.sash-tab {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 56px;
+  background: #5c2d00;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.sash-tab--left  { left: -9px; }
+.sash-tab--right { right: -9px; }
+
+.sash-pip {
+  width: 6px;
+  height: 6px;
+  background: #d97706;
+  border-radius: 50%;
+}
+
+/* Corner rivets */
+.sash-rivet {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #d97706;
+  border: 2px solid #92400e;
+}
+
+.sash-rivet--tl { top: 10px;    left: 10px; }
+.sash-rivet--tr { top: 10px;    right: 10px; }
+.sash-rivet--bl { bottom: 10px; left: 10px; }
+.sash-rivet--br { bottom: 10px; right: 10px; }
+
+/* Sash text */
+.sash-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fef3c7;
+  margin: 0 0 2px;
+}
+
+.sash-earned-label {
+  text-align: center;
+  font-size: 12px;
+  color: #fcd34d;
+  margin: 0 0 1rem;
+}
+
+/* Empty state */
+.sash-empty {
+  text-align: center;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.sash-empty-icon {
+  font-size: 36px;
+  margin-bottom: 6px;
+}
+
+.sash-empty-msg {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fef3c7;
+  margin: 0 0 4px;
+}
+
+.sash-empty-sub {
+  font-size: 12px;
+  color: #fcd34d;
+  margin: 0;
+}
+
+/* Earned badges grid (inside brown sash) */
+.sash-earned-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sash-earned-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 8px 10px;
+  min-width: 60px;
+}
+
+.sash-badge-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.sash-badge-name {
+  font-size: 10px;
+  color: #fef3c7;
+  text-align: center;
+}
+
+/* Available badges section */
+.sash-available {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.875rem;
+  margin: 0 1rem 1rem;
+}
+
+.sash-available-title {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  margin: 0 0 10px;
+}
+
+.sash-available-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.sash-avail-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 4px;
+  opacity: 0.5;
+}
+
+.sash-avail-badge--unlocked {
+  opacity: 1;
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.sash-avail-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sash-avail-name {
+  font-size: 10px;
+  text-align: center;
+  color: #374151;
+}
+
+.sash-avail-req {
+  font-size: 9px;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Debug button — remove when wired to real task completion */
+.sash-debug-btn {
+  display: block;
+  margin: 0 1rem 1rem;
+  width: calc(100% - 2rem);
 }
