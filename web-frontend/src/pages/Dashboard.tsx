@@ -5,25 +5,29 @@ import "../css/Dashboard.css";
 
 // --- Types ---
 interface Task {
-  id: string;
+  _id: string;
   title: string;
-  completed: boolean;
+  status: "todo" | "in_progress" | "done";
   dueDate: string;
+  priority: "low" | "medium" | "high";
+  type: string;
+  classId?: string;
 }
 
 interface Class {
-  id: string;
-  name: string;
-  color: string;
+  _id: string;
+  title: string;
+  courseCode: string;
+  semester?: string;
   tasks: Task[];
 }
 
 interface StudentGroup {
-  id: string;
+  _id: string;
   name: string;
-  members: number;
-  color: string;
-  tasks: Task[];
+  description: string;
+  memberIds: string[];
+  classId: string;
 }
 
 interface BadgeType {
@@ -37,77 +41,10 @@ interface BadgeType {
 
 // --- Badge definitions ---
 const availableBadges: BadgeType[] = [
-  { id: "starter",   icon: "⭐", name: "Starter",    description: "Complete your first task!",         tasksRequired: 1  },
-  { id: "achiever",  icon: "🔥", name: "Achiever",   description: "Complete 5 tasks in a week!",        tasksRequired: 5  },
-  { id: "champion",  icon: "🏆", name: "Champion",   description: "Complete 10 tasks in a week!",       tasksRequired: 10 },
-  { id: "legend",    icon: "💎", name: "Legend",     description: "Complete 20 tasks in a week!",       tasksRequired: 20 },
-];
-
-// --- Mock data ---
-const initialClasses: Class[] = [
-  {
-    id: "1",
-    name: "Mobile Development",
-    color: "#3b82f6",
-    tasks: [
-      { id: "t1", title: "Build React Native app",       completed: false, dueDate: "2026-04-05" },
-      { id: "t2", title: "Implement authentication",     completed: true,  dueDate: "2026-03-30" },
-      { id: "t3", title: "Add push notifications",       completed: false, dueDate: "2026-04-10" },
-    ],
-  },
-  {
-    id: "2",
-    name: "Web Development",
-    color: "#a855f7",
-    tasks: [
-      { id: "t4", title: "Create responsive layout",     completed: false, dueDate: "2026-04-02" },
-      { id: "t5", title: "Setup React Router",           completed: true,  dueDate: "2026-03-28" },
-      { id: "t6", title: "Implement API integration",    completed: false, dueDate: "2026-04-08" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Database Design",
-    color: "#22c55e",
-    tasks: [
-      { id: "t7", title: "Design ER diagram",            completed: true,  dueDate: "2026-03-25" },
-      { id: "t8", title: "Normalize tables",             completed: false, dueDate: "2026-04-01" },
-    ],
-  },
-];
-
-const initialGroups: StudentGroup[] = [
-  {
-    id: "g1",
-    name: "Team Alpha",
-    members: 4,
-    color: "#f97316",
-    tasks: [
-      { id: "gt1", title: "Project proposal presentation", completed: true,  dueDate: "2026-03-27" },
-      { id: "gt2", title: "Design mockups",                completed: false, dueDate: "2026-04-05" },
-      { id: "gt3", title: "Final report submission",       completed: false, dueDate: "2026-04-15" },
-    ],
-  },
-  {
-    id: "g2",
-    name: "Team Beta",
-    members: 5,
-    color: "#ec4899",
-    tasks: [
-      { id: "gt4", title: "Research phase completion",     completed: true,  dueDate: "2026-03-20" },
-      { id: "gt5", title: "Prototype development",         completed: false, dueDate: "2026-04-07" },
-    ],
-  },
-  {
-    id: "g3",
-    name: "Team Gamma",
-    members: 3,
-    color: "#14b8a6",
-    tasks: [
-      { id: "gt6", title: "Literature review",             completed: false, dueDate: "2026-04-03" },
-      { id: "gt7", title: "Testing plan",                  completed: false, dueDate: "2026-04-12" },
-    ],
-  },
+  { id: "starter",  icon: "⭐", name: "Starter",  description: "Complete your first task!",   tasksRequired: 1  },
+  { id: "achiever", icon: "🔥", name: "Achiever", description: "Complete 5 tasks in a week!", tasksRequired: 5  },
+  { id: "champion", icon: "🏆", name: "Champion", description: "Complete 10 tasks in a week!", tasksRequired: 10 },
+  { id: "legend",   icon: "💎", name: "Legend",   description: "Complete 20 tasks in a week!", tasksRequired: 20 },
 ];
 
 // --- Helper ---
@@ -127,17 +64,18 @@ function TaskItem({
   task: Task;
   onToggle: () => void;
 }) {
+  const isDone = task.status === "done";
   return (
     <div className="task-item" onClick={onToggle}>
       <input
         type="checkbox"
         className="task-checkbox"
-        checked={task.completed}
+        checked={isDone}
         onChange={onToggle}
         onClick={(e) => e.stopPropagation()}
       />
       <div className="task-info">
-        <span className={`task-title ${task.completed ? "task-completed" : ""}`}>
+        <span className={`task-title ${isDone ? "task-completed" : ""}`}>
           {task.title}
         </span>
         <span className="task-due">Due: {task.dueDate}</span>
@@ -155,19 +93,19 @@ function ClassCard({
   onToggleTask: (taskId: string) => void;
   onAddTask: () => void;
 }) {
-  const completed = cls.tasks.filter((t) => t.completed).length;
+  const completed = cls.tasks.filter((t) => t.status === "done").length;
   return (
     <div className="content-card">
-      <div className="content-card-header" style={{ borderLeft: `4px solid ${cls.color}` }}>
+      <div className="content-card-header">
         <div>
-          <h3 className="content-card-title">{cls.name}</h3>
+          <h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3>
           <span className="content-card-meta">{completed}/{cls.tasks.length} tasks complete</span>
         </div>
         <button className="add-task-btn" onClick={onAddTask} title="Add task">+</button>
       </div>
       <div className="task-list">
         {cls.tasks.map((task) => (
-          <TaskItem key={task.id} task={task} onToggle={() => onToggleTask(task.id)} />
+          <TaskItem key={task._id} task={task} onToggle={() => onToggleTask(task._id)} />
         ))}
       </div>
     </div>
@@ -176,29 +114,18 @@ function ClassCard({
 
 function GroupCard({
   group,
-  onToggleTask,
-  onAddTask,
 }: {
   group: StudentGroup;
-  onToggleTask: (taskId: string) => void;
-  onAddTask: () => void;
 }) {
-  const completed = group.tasks.filter((t) => t.completed).length;
   return (
     <div className="content-card">
-      <div className="content-card-header" style={{ borderLeft: `4px solid ${group.color}` }}>
+      <div className="content-card-header">
         <div>
           <h3 className="content-card-title">{group.name}</h3>
           <span className="content-card-meta">
-            {group.members} members · {completed}/{group.tasks.length} tasks complete
+            {group.memberIds.length} members · {group.description}
           </span>
         </div>
-        <button className="add-task-btn" onClick={onAddTask} title="Add task">+</button>
-      </div>
-      <div className="task-list">
-        {group.tasks.map((task) => (
-          <TaskItem key={task.id} task={task} onToggle={() => onToggleTask(task.id)} />
-        ))}
       </div>
     </div>
   );
@@ -307,8 +234,9 @@ function BadgeSash({
 // --- Main Dashboard ---
 export function Dashboard() {
   // const navigate = useNavigate();
-  const [classes, setClasses] = useState<Class[]>(initialClasses);
-  const [groups, setGroups] = useState<StudentGroup[]>(initialGroups);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [groups, setGroups] = useState<StudentGroup[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"classes" | "groups">("classes");
   const [weeklyCount, setWeeklyCount] = useState(0);
   const [weekStartDate, setWeekStartDate] = useState("");
@@ -316,6 +244,41 @@ export function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTarget, setModalTarget] = useState<{ type: "class" | "group"; id: string } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  // Fetch classes, tasks, and groups on mount
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    const fetchAll = async () => {
+      try {
+        // Fetch classes
+        const classRes = await fetch(`/api/classes?userId=${userId}`);
+        const classData = await classRes.json();
+
+        // Fetch tasks per class and attach them
+        const classesWithTasks = await Promise.all(
+          classData.map(async (cls: Class) => {
+            const taskRes = await fetch(`/api/tasks?userId=${userId}&classId=${cls._id}`);
+            const tasks = await taskRes.json();
+            return { ...cls, tasks };
+          })
+        );
+        setClasses(classesWithTasks);
+
+        // Fetch groups
+        const groupRes = await fetch(`/api/groups?userId=${userId}`);
+        const groupData = await groupRes.json();
+        setGroups(groupData);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
+  }, []);
 
   // Weekly tracking init
   useEffect(() => {
@@ -366,48 +329,51 @@ export function Dashboard() {
     }
   };
 
-  const toggleClassTask = (classId: string, taskId: string) => {
+  const toggleClassTask = async (classId: string, taskId: string) => {
+    // Optimistic UI update
     setClasses((prev) =>
       prev.map((cls) => {
-        if (cls.id !== classId) return cls;
+        if (cls._id !== classId) return cls;
         return {
           ...cls,
           tasks: cls.tasks.map((task) => {
-            if (task.id !== taskId) return task;
-            if (!task.completed) incrementBalloons(weeklyCount, earnedBadges, weekStartDate);
-            return { ...task, completed: !task.completed };
+            if (task._id !== taskId) return task;
+            if (task.status !== "done") incrementBalloons(weeklyCount, earnedBadges, weekStartDate);
+            return {
+              ...task,
+              status: task.status === "done" ? "todo" : "done",
+            } as Task;
           }),
         };
       })
     );
+
+    // Sync to backend
+    await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
   };
 
-  const toggleGroupTask = (groupId: string, taskId: string) => {
-    setGroups((prev) =>
-      prev.map((grp) => {
-        if (grp.id !== groupId) return grp;
-        return {
-          ...grp,
-          tasks: grp.tasks.map((task) => {
-            if (task.id !== taskId) return task;
-            if (!task.completed) incrementBalloons(weeklyCount, earnedBadges, weekStartDate);
-            return { ...task, completed: !task.completed };
-          }),
-        };
-      })
-    );
-  };
-
-  const handleAddTask = (title: string, dueDate: string) => {
+  const handleAddTask = async (title: string, dueDate: string) => {
     if (!modalTarget) return;
-    const newTask: Task = { id: `task-${Date.now()}`, title, completed: false, dueDate };
+    const userId = localStorage.getItem("userId");
+
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        dueDate,
+        userId,
+        classId: modalTarget.type === "class" ? modalTarget.id : null,
+      }),
+    });
+
+    const newTask: Task = await res.json();
+
     if (modalTarget.type === "class") {
       setClasses((prev) =>
-        prev.map((c) => (c.id === modalTarget.id ? { ...c, tasks: [...c.tasks, newTask] } : c))
-      );
-    } else {
-      setGroups((prev) =>
-        prev.map((g) => (g.id === modalTarget.id ? { ...g, tasks: [...g.tasks, newTask] } : g))
+        prev.map((c) =>
+          c._id === modalTarget.id ? { ...c, tasks: [...c.tasks, newTask] } : c
+        )
       );
     }
   };
@@ -417,17 +383,20 @@ export function Dashboard() {
     setModalOpen(true);
   };
 
-  const totalTasks =
-    classes.reduce((a, c) => a + c.tasks.length, 0) +
-    groups.reduce((a, g) => a + g.tasks.length, 0);
+  const totalTasks = classes.reduce((a, c) => a + c.tasks.length, 0);
 
-  const completedTasks =
-    classes.reduce((a, c) => a + c.tasks.filter((t) => t.completed).length, 0) +
-    groups.reduce((a, g) => a + g.tasks.filter((t) => t.completed).length, 0);
+  const completedTasks = classes.reduce(
+    (a, c) => a + c.tasks.filter((t) => t.status === "done").length,
+    0
+  );
 
   const handleLogout = () => {
     // navigate("/");
   };
+
+  if (loading) {
+    return <div className="dashboard-page"><div className="overlay"><p>Loading...</p></div></div>;
+  }
 
   return (
     <div className="dashboard-page">
@@ -537,10 +506,10 @@ export function Dashboard() {
               <div className="tab-content-grid">
                 {classes.map((cls) => (
                   <ClassCard
-                    key={cls.id}
+                    key={cls._id}
                     cls={cls}
-                    onToggleTask={(taskId) => toggleClassTask(cls.id, taskId)}
-                    onAddTask={() => openModal("class", cls.id)}
+                    onToggleTask={(taskId) => toggleClassTask(cls._id, taskId)}
+                    onAddTask={() => openModal("class", cls._id)}
                   />
                 ))}
               </div>
@@ -550,10 +519,8 @@ export function Dashboard() {
               <div className="tab-content-grid">
                 {groups.map((group) => (
                   <GroupCard
-                    key={group.id}
+                    key={group._id}
                     group={group}
-                    onToggleTask={(taskId) => toggleGroupTask(group.id, taskId)}
-                    onAddTask={() => openModal("group", group.id)}
                   />
                 ))}
               </div>
