@@ -14,33 +14,34 @@ import "../css/professorView.css";
 
     /* ================= TYPES ================= */
 
-    interface User {
+interface User {
     _id: string;
-    username: string;
+    name: string;
+    email: string;
     role: "student" | "professor";
-    }
+}
 
-    interface Task {
+interface Task {
     _id: string;
     title: string;
     description?: string;
     status: "todo" | "in_progress" | "done";
     assignedToClass?: string;
     assignedToGroup?: string;
-    }
+}
 
-    interface Group {
+interface Group {
     _id: string;
     name: string;
     members: User[];
-    }
+}
 
-    interface Class {
+interface Class {
     _id: string;
     name: string;
     students: User[];
     groups?: Group[];
-    }
+}
 
     /* ================= COMPONENT ================= */
 
@@ -398,7 +399,7 @@ import "../css/professorView.css";
 
                 {selectedClass.students?.map((s) => (
                     <div key={s._id} className="task-item">
-                    {s.username}
+                    {s.name}
                     <button onClick={() => removeStudent(s._id)}>
                         <X size={14} />
                     </button>

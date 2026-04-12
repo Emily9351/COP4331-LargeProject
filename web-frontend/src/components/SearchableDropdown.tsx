@@ -8,7 +8,7 @@ interface Student {
     _id: string;
     firstName: string;
     lastName: string;
-    username: string;
+    name: string;
     role?: "student" | "professor";
     }
 
@@ -41,11 +41,11 @@ export function SearchableDropdown({
         const fullName =
         `${student.firstName} ${student.lastName}`.toLowerCase();
 
-        const username = student.username.toLowerCase();
+        const name = student.name.toLowerCase();
 
         return (
         fullName.includes(searchLower) ||
-        username.includes(searchLower)
+        name.includes(searchLower)
         );
 });
 
@@ -69,12 +69,12 @@ export function SearchableDropdown({
     /* ================= SELECT ================= */
 
     const handleSelect = (student: Student) => {
-        onChange(student.username);
+        onChange(student.name);
         setIsOpen(false);
         setSearchTerm("");
     };
 
-    const selectedStudent = students.find((s) => s.username === value);
+    const selectedStudent = students.find((s) => s.name === value);
 
     /* ================= UI ================= */
 
@@ -92,8 +92,8 @@ export function SearchableDropdown({
                 <span>
                     {selectedStudent.firstName} {selectedStudent.lastName}
                 </span>
-                <span className="student-username">
-                    @{selectedStudent.username}
+                <span className="student-name">
+                    @{selectedStudent.name}
                 </span>
                 </div>
             ) : (
@@ -133,7 +133,7 @@ export function SearchableDropdown({
                     <div
                     key={student._id}
                     className={`dropdown-item ${
-                        value === student.username ? "selected" : ""
+                        value === student.name ? "selected" : ""
                     }`}
                     onClick={() => handleSelect(student)}
                     >
@@ -143,8 +143,8 @@ export function SearchableDropdown({
                         <span className="student-name">
                         {student.firstName} {student.lastName}
                         </span>
-                        <span className="student-username-small">
-                        @{student.username}
+                        <span className="student-name-small">
+                        @{student.name}
                         </span>
                     </div>
                     </div>
