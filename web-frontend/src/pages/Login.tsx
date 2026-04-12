@@ -29,6 +29,8 @@ export function Login() {
             }
 
             const data = await response.json();
+
+            localStorage.setItem("userId", data.userId); 
             console.log("Login successful", data);
 
             // Redirect to dashboard
