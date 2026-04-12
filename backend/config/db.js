@@ -1,8 +1,9 @@
+// config/db.js
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect("mongodb+srv://studyapp-admin:Sghpwm0FmmxsQZpv@studyapp-cluster.sqkwc7q.mongodb.net/?appName=studyapp-cluster");
     console.log("MongoDB connected");
   } catch (err) {
     console.error(err.message);
