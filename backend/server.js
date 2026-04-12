@@ -870,9 +870,6 @@ app.get("/api/users/:id/rsvps", async (req, res) => {
 });
 
 
-// 4️⃣ Frontend static files
-const buildPath = path.join(__dirname, "..", "web-frontend", "dist");
-const indexPath = path.join(buildPath, "index.html");
 // FORGOT PASSWORD
 app.post("/api/forgot-password", async (req, res) => {
   try {
@@ -962,6 +959,3 @@ if (fs.existsSync(buildPath) && fs.existsSync(indexPath)) {
   console.warn("Frontend dist folder not found. API routes will work, but frontend won't be served.");
   console.warn("Run 'npm run build' in web-frontend to build the frontend.");
 }
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
