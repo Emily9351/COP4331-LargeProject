@@ -1,11 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
     LogOut,
     Plus,
     Trash2,
-    Users,
-    BookOpen,
-    UserPlus,
     X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -43,6 +40,15 @@ interface Class {
     groups?: Group[];
 }
 
+type Student = {
+    _id: string;
+    name: string;
+    email: string;
+    role: "student";
+};
+
+
+
     /* ================= COMPONENT ================= */
 
     export function ProfessorDashboard() {
@@ -50,8 +56,8 @@ interface Class {
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
 
     const [groups, setGroups] = useState<Group[]>([]);
-    const [students, setStudents] = useState<User[]>([]);
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);
+    const [_tasks, setTasks] = useState<Task[]>([]);
 
     const [newClassName, setNewClassName] = useState("");
     const [newGroupName, setNewGroupName] = useState("");

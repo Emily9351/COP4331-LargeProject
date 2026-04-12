@@ -6,9 +6,8 @@ import "../css/SearchableDropdown.css";
 
 interface Student {
     _id: string;
-    firstName: string;
-    lastName: string;
     name: string;
+    email: string;
     role?: "student" | "professor";
     }
 
@@ -39,7 +38,7 @@ export function SearchableDropdown({
         const searchLower = searchTerm.toLowerCase();
 
         const fullName =
-        `${student.firstName} ${student.lastName}`.toLowerCase();
+        `${student.name}`.toLowerCase();
 
         const name = student.name.toLowerCase();
 
@@ -90,7 +89,7 @@ export function SearchableDropdown({
                 <div className="selected-student">
                 <User size={16} />
                 <span>
-                    {selectedStudent.firstName} {selectedStudent.lastName}
+                    {selectedStudent.name}
                 </span>
                 <span className="student-name">
                     @{selectedStudent.name}
@@ -141,7 +140,7 @@ export function SearchableDropdown({
 
                     <div className="student-info">
                         <span className="student-name">
-                        {student.firstName} {student.lastName}
+                        {student.name}
                         </span>
                         <span className="student-name-small">
                         @{student.name}
