@@ -147,6 +147,7 @@ function AddTaskModal({
 
   const handleSubmit = () => {
     if (!title.trim()) return;
+    if (!title.trim()) return;
     onAdd(title.trim(), dueDate);
     setTitle("");
     setDueDate("");
@@ -248,30 +249,33 @@ export function Dashboard() {
   // Fetch classes, tasks, and groups on mount
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    if (!userId) return;
+
+    if (!userId) {
+      console.warn("No userId found");
+      setLoading(false);
+      return;
+    }
 
     const fetchAll = async () => {
       try {
-        // Fetch classes
         const classRes = await fetch(`/api/classes?userId=${userId}`);
         const classData = await classRes.json();
 
-        // Fetch tasks per class and attach them
         const classesWithTasks = await Promise.all(
           classData.map(async (cls: Class) => {
             const taskRes = await fetch(`/api/tasks?userId=${userId}&classId=${cls._id}`);
-            const tasks = await taskRes.json();
-            return { ...cls, tasks };
+            return { ...cls, tasks: await taskRes.json() };
           })
         );
+
         setClasses(classesWithTasks);
 
-        // Fetch groups
         const groupRes = await fetch(`/api/groups?userId=${userId}`);
         const groupData = await groupRes.json();
         setGroups(groupData);
+
       } catch (error) {
-        console.error("Failed to fetch data:", error);
+        console.error("Fetch failed:", error);
       } finally {
         setLoading(false);
       }
