@@ -31,8 +31,8 @@ export function Login() {
             const data = await response.json();
 
             localStorage.setItem("userId", data.userId); 
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("role", data.role); 
+            localStorage.setItem("role", data.role);
+            localStorage.setItem("name", data.name); 
 
             console.log("Login successful", data);
 
