@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SearchableDropdown } from "../components/SearchableDropdown";
-import "../css/professorView.css";
+import "../css/ProfessorDashboard.css";
 
     /* ================= TYPES ================= */
 
