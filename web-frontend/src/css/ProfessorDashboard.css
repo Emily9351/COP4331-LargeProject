@@ -1,0 +1,252 @@
+/* ================= GLOBAL ================= */
+
+.dashboard-page {
+    min-height: 100vh;
+    width: 100%;
+    background: #0f172a; /* dark slate */
+    color: #e2e8f0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.overlay {
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* ================= NAVBAR ================= */
+
+.dashboard-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #111827;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+}
+
+.name {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* ================= BUTTONS ================= */
+
+.button {
+    background: #1f2937;
+    color: #e2e8f0;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s;
+}
+
+.button:hover {
+    background: #374151;
+}
+
+.button-primary {
+    background: #4f46e5;
+}
+
+.button-primary:hover {
+    background: #4338ca;
+}
+
+/* ================= CARDS ================= */
+
+.dashboard-content {
+    display: grid;
+    gap: 20px;
+}
+
+.card {
+    background: #111827;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
+}
+
+.house-card {
+    max-width: 900px;
+    margin: auto;
+}
+
+.badge-card {
+    max-width: 900px;
+    margin: auto;
+}
+
+.content-card {
+    background: #1f2937;
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.content-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.content-card-title {
+    font-weight: 600;
+}
+
+.content-card-meta {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* ================= INPUTS ================= */
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #374151;
+    background: #0f172a;
+    color: white;
+    outline: none;
+}
+
+input:focus {
+    border-color: #4f46e5;
+}
+
+/* ================= TASK / LIST ITEMS ================= */
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1f2937;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+/* ================= MODAL ================= */
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-box {
+    background: #111827;
+    padding: 20px;
+    border-radius: 12px;
+    width: 300px;
+}
+
+.modal-title {
+    margin-bottom: 12px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+}
+
+/* ================= DROPDOWN ================= */
+
+.searchable-dropdown {
+    position: relative;
+    margin-top: 10px;
+}
+
+.dropdown-trigger {
+    background: #1f2937;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdown-menu {
+    position: absolute;
+    width: 100%;
+    background: #111827;
+    border-radius: 8px;
+    margin-top: 6px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.dropdown-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    border-bottom: 1px solid #374151;
+}
+
+.dropdown-search input {
+    margin: 0;
+}
+
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dropdown-item:hover {
+    background: #1f2937;
+}
+
+.dropdown-item.selected {
+    background: #4f46e5;
+}
+
+.dropdown-loading,
+.dropdown-empty {
+    padding: 10px;
+    color: #94a3b8;
+}
+
+/* ================= ICON HELPERS ================= */
+
+.icon {
+    display: inline-flex;
+}
