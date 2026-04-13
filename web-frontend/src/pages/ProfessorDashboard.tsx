@@ -57,7 +57,7 @@ type Student = {
 
     const [groups, setGroups] = useState<Group[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
-    const [_tasks, setTasks] = useState<Task[]>([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
 
     const [newClassName, setNewClassName] = useState("");
     const [newGroupName, setNewGroupName] = useState("");
@@ -425,8 +425,61 @@ type Student = {
                     Add
                 </button>
 
+                <div className="content-card">
+    <h4>Create Task (Class)</h4>
+
+    <input
+        placeholder="Task title"
+        value={taskInputs[selectedClass._id]?.title || ""}
+        onChange={(e) =>
+            setTaskInputs((prev) => ({
+                ...prev,
+                [selectedClass._id]: {
+                    ...prev[selectedClass._id],
+                    title: e.target.value,
+                },
+            }))
+        }
+    />
+
+        <input
+            placeholder="Task description"
+            value={taskInputs[selectedClass._id]?.description || ""}
+            onChange={(e) =>
+                setTaskInputs((prev) => ({
+                    ...prev,
+                    [selectedClass._id]: {
+                        ...prev[selectedClass._id],
+                        description: e.target.value,
+                    },
+                }))
+            }
+        />
+
+        <button
+            className="button button-primary"
+            onClick={() => createTask(selectedClass._id, "class")}
+        >
+            <Plus size={16} /> Create Task
+        </button>
+    </div>
+
                 {/* Groups */}
                 <h3>Groups</h3>
+
+                <div className="content-card">
+                    <h4>Create Group</h4>
+
+                    <input
+                        value={newGroupName}
+                        onChange={(e) => setNewGroupName(e.target.value)}
+                        placeholder="Group name"
+                    />
+
+                    <button className="button button-primary" onClick={createGroup}>
+                        <Plus size={16} /> Create Group
+                    </button>
+                </div>
 
                 {groups.map((g) => (
                     <div key={g._id} className="content-card">
@@ -454,6 +507,25 @@ type Student = {
 
                 </div>
             )}
+
+            <h3>Tasks</h3>
+
+            {tasks.length === 0 && <p>No tasks yet</p>}
+
+            {tasks.map((t) => (
+                <div key={t._id} className="task-item">
+                    <div>
+                        <div>{t.title}</div>
+                        <small>{t.status}</small>
+                    </div>
+
+                    <button onClick={() => deleteTask(t._id)}>
+                        <Trash2 size={14} />
+                    </button>
+                </div>
+            ))}
+
+            
 
             </div>
 
