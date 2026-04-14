@@ -395,164 +395,187 @@ html, body {
 /* ── Content cards (class/group) ── */
 .content-card {
   background: #ffffff;
-  border: 1px solid #718096;
-  border-radius: 0.5rem;
+  border: 2px solid #718096;
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.content-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .content-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem 0.75rem;
-  border-bottom: 1px solid #f3f4f6;
-  padding-left: 1rem;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-left: 1.25rem;
 }
 
 .content-card-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 2px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 4px;
   color: #1a202c;
 }
 
 .content-card-meta {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #4a5568;
+  font-weight: 500;
 }
 
 .add-task-btn {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 1.5px solid #d1d5db;
+  border: 2px solid #718096;
   background: white;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   line-height: 1;
-  color: #6b7280;
+  color: #1e3a8a;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: all 0.2s ease;
+  font-weight: 700;
 }
 
 .add-task-btn:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: #1e3a8a;
+  color: white;
+  border-color: #1e3a8a;
+  transform: rotate(90deg);
 }
 
 /* ── Task list ── */
 .task-list {
-  padding: 0.5rem 0;
+  padding: 0.75rem 0;
 }
 
 .task-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 0.6rem 1.25rem;
+  gap: 12px;
+  padding: 1rem 1.5rem;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: all 0.15s ease;
   background: #ffffff;
-  border: 1px solid #718096;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.task-item:first-child {
+  border-top: 1px solid #e2e8f0;
 }
 
 .task-item:hover {
   background: #ffc107;
+  padding-left: 1.75rem;
 }
 
 .task-checkbox {
-  margin-top: 2px;
+  margin-top: 3px;
   cursor: pointer;
   accent-color: #1e3a8a;
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
 .task-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
+  flex: 1;
 }
 
 .task-title {
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   color: #1a202c;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-weight: 500;
 }
 
 .task-title:hover {
   color: #1e3a8a;
-
+  font-weight: 600;
 }
 
 .task-completed {
   text-decoration: line-through;
   color: #4a5568;
+  opacity: 0.6;
 }
 
 .task-due {
-  font-size: 0.7rem;
-  color: #9ca3af;
+  font-size: 0.75rem;
+  color: #4a5568;
+  font-weight: 500;
 }
 
 /* ── Modal ── */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(30, 58, 138, 0.5);
+  backdrop-filter: blur(4px);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
 }
 
 .modal-box {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 1.75rem;
+  border-radius: 16px;
+  padding: 2rem;
   width: 90%;
-  max-width: 380px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  border: 1px solid #718096;
+  gap: 1.25rem;
+  border: 2px solid #718096;
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
   color: #1a202c;
 }
 
 .modal-input {
   width: 100%;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid #718096;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #718096;
+  border-radius: 10px;
+  font-size: 1rem;
   color: #1a202c;
   background: #ffffff;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.15s;
+  transition: all 0.2s ease;
 }
 
 .modal-input:focus {
   border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 1rem;
+  margin-top: 0.5rem;
 }
 
 /* ── Toast ── */
