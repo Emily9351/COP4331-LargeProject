@@ -176,6 +176,36 @@ input:focus, select:focus, textarea:focus {
     box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
 }
 
+/* ================= CHECKBOX CONTAINER ================= */
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+    padding: 12px;
+    background: rgba(30, 58, 138, 0.1);
+    border-radius: 8px;
+    border: 2px solid #1e3a8a;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: auto;
+    height: 20px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #1e3a8a;
+}
+
+.checkbox-container label {
+    font-size: 0.95rem;
+    color: #1e3a8a;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0;
+    user-select: none;
+}
+
 /* ================= TASK / LIST ITEMS ================= */
 
 .task-item {

@@ -377,7 +377,10 @@ export function ProfessorDashboard() {
                             <div className="content-card">
                                 <h4>Create Group</h4>
                                 <input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} placeholder="Group name" />
-                                <div style={{ margin: '10px 0', display: 'flex', alignItems: 'center', gap: '8px' }}><input type="checkbox" id="allowTasks" checked={allowStudentTasks} onChange={(e) => setAllowStudentTasks(e.target.checked)} /><label htmlFor="allowTasks" style={{ fontSize: '0.9rem', color: 'white' }}>Allow students to add tasks</label></div>
+                                <div className="checkbox-container">
+                                    <input type="checkbox" id="allowTasks" checked={allowStudentTasks} onChange={(e) => setAllowStudentTasks(e.target.checked)} />
+                                    <label htmlFor="allowTasks">Allow students to add tasks</label>
+                                </div>
                                 <button className="button button-primary" onClick={createGroup}><Plus size={16} /> Create Group</button>
                             </div>
                             {groups.map((g) => (
