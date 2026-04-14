@@ -3,8 +3,8 @@
 .dashboard-page {
     min-height: 100vh;
     width: 100%;
-    background: #87CEEB; /* Sky blue */
-    color: #0c4a6e;
+    background: #fffef7;
+    color: #1a202c;
     font-family: Arial, Helvetica, sans-serif;
     background-image: url('../assets/UpBackground.png');
     background-size: cover;
@@ -14,7 +14,7 @@
 .overlay {
     min-height: 100vh;
     padding: 20px;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(26, 32, 44, 0.6);
 }
 
 /* ================= NAVBAR ================= */
@@ -24,11 +24,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    background: #f0f9ff;
+    background: #fffef7;
     border-radius: 12px;
     margin-bottom: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    border: 1px solid #bae6fd;
+    border: 1px solid #cbd5e0;
 }
 
 .dashboard-brand {
@@ -52,7 +52,7 @@
 
 .subtitle {
     font-size: 12px;
-    color: #64748b;
+    color: #4a5568;
 }
 
 /* ================= BUTTONS ================= */
@@ -60,7 +60,7 @@
 .button {
     background: #ffffff;
     color: #111;
-    border: 1px solid #bae6fd;
+    border: 1px solid #cbd5e0;
     padding: 8px 12px;
     border-radius: 8px;
     cursor: pointer;
@@ -72,7 +72,7 @@
 }
 
 .button:hover {
-    background: #f0f9ff;
+    background: #f7fafc;
 }
 
 .button-primary {
@@ -93,17 +93,17 @@
 }
 
 .card {
-    background: #f0f9ff;
+    background: #fffef7;
     padding: 20px;
     border-radius: 14px;
     box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
-    border: 1px solid #bae6fd;
+    border: 1px solid #cbd5e0;
 }
 
 .house-card, .badge-card {
-    max-width: 80vw
+    max-width: 80vw;
     margin: auto;
-    background-color: #f1ffa6; /* Yellow-green as requested for student, matching for consistency or keeping professor distinct? User said ALL house/badge cards. */
+    background-color: #fef9e7;
 }
 
 .content-card {
@@ -111,7 +111,7 @@
     padding: 14px;
     border-radius: 10px;
     margin-top: 10px;
-    border: 1px solid #bae6fd;
+    border: 1px solid #cbd5e0;
 }
 
 .content-card-header {
@@ -137,7 +137,7 @@ input, select, textarea {
     padding: 10px;
     margin-top: 10px;
     border-radius: 8px;
-    border: 1px solid #bae6fd;
+    border: 1px solid #cbd5e0;
     background: #ffffff;
     color: #111;
     outline: none;
@@ -145,7 +145,7 @@ input, select, textarea {
 }
 
 input:focus, select:focus, textarea:focus {
-    border-color: #0ea5e9;
+    border-color: #2563eb;
 }
 
 /* ================= TASK / LIST ITEMS ================= */

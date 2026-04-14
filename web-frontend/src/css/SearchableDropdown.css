@@ -9,21 +9,21 @@
 /* ================= TRIGGER ================= */
 
 .dropdown-trigger {
-    background: #1f2937;
-    color: #e2e8f0;
+    background: #ffffff;
+    color: #1a202c;
     padding: 10px 12px;
     border-radius: 10px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid #374151;
+    border: 1px solid #cbd5e0;
     transition: 0.2s;
 }
 
 .dropdown-trigger:hover {
-    background: #111827;
-    border-color: #4f46e5;
+    background: #f7fafc;
+    border-color: #2563eb;
 }
 
 /* Selected value layout */
@@ -36,7 +36,7 @@
 
 /* Placeholder text */
 .placeholder {
-    color: #94a3b8;
+    color: #718096;
     font-size: 14px;
 }
 
@@ -52,13 +52,13 @@
 
 .student-username {
     font-size: 12px;
-    color: #94a3b8;
+    color: #718096;
 }
 
 /* Chevron icon animation */
 .dropdown-icon {
     transition: transform 0.2s ease;
-    color: #94a3b8;
+    color: #718096;
 }
 
 .dropdown-icon.open {
@@ -72,13 +72,13 @@
     top: 110%;
     left: 0;
     width: 100%;
-    background: #111827;
+    background: #ffffff;
     border-radius: 10px;
     margin-top: 6px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     z-index: 100;
     overflow: hidden;
-    border: 1px solid #374151;
+    border: 1px solid #cbd5e0;
 }
 
 /* ================= SEARCH INPUT ================= */
@@ -88,8 +88,8 @@
     align-items: center;
     gap: 8px;
     padding: 10px;
-    border-bottom: 1px solid #374151;
-    background: #0f172a;
+    border-bottom: 1px solid #cbd5e0;
+    background: #f7fafc;
 }
 
 .dropdown-search input {
@@ -97,12 +97,12 @@
     border: none;
     outline: none;
     background: transparent;
-    color: #e2e8f0;
+    color: #1a202c;
     font-size: 14px;
 }
 
 .dropdown-search input::placeholder {
-    color: #64748b;
+    color: #718096;
 }
 
 /* ================= LIST ================= */
@@ -113,8 +113,9 @@
 }
 
 /* Scrollbar styling */
-.dropdown-list::-webkit-scrollbar {
-    width: 6px;
+.dropdown-list::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
 }
 
 .dropdown-list::-webkit-scrollbar-thumb {
@@ -134,11 +135,11 @@
 }
 
 .dropdown-item:hover {
-    background: #1f2937;
+    background: #f7fafc;
 }
 
 .dropdown-item.selected {
-    background: #4f46e5;
+    background: #2563eb;
     color: white;
 }
 
@@ -155,7 +156,7 @@
 
 .student-username-small {
     font-size: 12px;
-    color: #94a3b8;
+    color: #718096;
 }
 
 /* ================= STATES ================= */
@@ -163,7 +164,7 @@
 .dropdown-loading,
 .dropdown-empty {
     padding: 12px;
-    color: #94a3b8;
+    color: #718096;
     text-align: center;
     font-size: 14px;
 }

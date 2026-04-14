@@ -7,7 +7,7 @@ html, body {
 
 .login-page {
     position: relative;
-    background-color: yellow;
+    background-color: #fffef7;
     background-image: url('../assets/UpBackground.png');
     display: flex;
     align-items: center;
@@ -22,20 +22,21 @@ html, body {
 .overlay {
     position: absolute;
     inset: 0; 
-    background: rgba(0,0,0,0.5); 
+    background: rgba(26, 32, 44, 0.6); 
     z-index: 1;
 }
 
 .login-card {
     position: relative;
     z-index: 2;
-    background: rgba(255,2090,115,0.7); 
+    background: rgba(255, 254, 247, 0.95); 
+    border: 2px solid rgba(203, 213, 224, 0.8);
     border-radius: 16px;
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(8px);
     padding: 2rem;
     width: 100%;
     max-width: 25em;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 
@@ -66,11 +67,11 @@ html, body {
 .login-header h1 {
     font-size: 24px;
     margin: 8px 0;
-    color: crimson;
+    color: #1a202c;
 }
 
 .login-header p {
-    color: darkblue;
+    color: #4a5568;
     font-size: 16px;
     font-weight: 600;
 }
@@ -84,7 +85,7 @@ html, body {
 .input-group label {
     font-size: 14px;
     font-weight: 500;
-    color: darkblue;
+    color: #1a202c;
 
 }
 
@@ -98,17 +99,17 @@ html, body {
     top: 10px;
     width: 16px;
     height: 16px;
-    color: #aaa;
+    color: #718096;
 }
 
 .input-wrapper input {
     width: 100%;
     padding: 10px 10px 10px 34px;
-    border: 1px solid #ccc;
+    border: 1px solid #cbd5e0;
     border-radius: 6px;
     outline: none;
-    color: black;
-    background-color: white;
+    color: #1a202c;
+    background-color: #ffffff;
     align-items: center;
     display: flex;
 }
@@ -123,13 +124,16 @@ html, body {
     border: none;
     border-radius: 6px;
     color: white;
-    background: linear-gradient(to left, #dc143c, #dc143c);
+    background: linear-gradient(to right, #2563eb, #1d4ed8);
     cursor: pointer;
     transition: 0.3s;
+    font-weight: 600;
 }
 
 .login-button:hover {
-    background: linear-gradient(to left, #dc143c, #dc143c);
+    background: linear-gradient(to right, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .footer-text {
@@ -137,11 +141,11 @@ html, body {
     text-align: center;
     font-size: 14px;
     margin-top: 16px;
-    color: black;
+    color: #4a5568;
 }
 
 .footer-text a {
-    color: crimson;
+    color: #2563eb;
     text-decoration: none;
     font-weight: 600;
 
