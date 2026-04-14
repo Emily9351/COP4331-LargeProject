@@ -160,6 +160,7 @@ input, select, textarea {
     width: 100%;
     padding: 12px 14px;
     margin-top: 12px;
+    margin-bottom: 12px;
     border-radius: 10px;
     border: 2px solid #718096;
     background: #ffffff;
