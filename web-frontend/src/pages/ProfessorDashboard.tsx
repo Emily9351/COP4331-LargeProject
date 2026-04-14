@@ -45,7 +45,9 @@ export function ProfessorDashboard() {
     const [selectedStudentId, setSelectedStudentId] = useState("");
 
     const [taskTitle, setTaskTitle] = useState("");
+    const [taskDueDate, setTaskDueDate] = useState("");
     const [groupTaskTitles, setGroupTaskTitles] = useState<{ [groupId: string]: string }>({});
+    const [groupTaskDueDates, setGroupTaskDueDates] = useState<{ [groupId: string]: string }>({});
 
     const [deleteModal, setDeleteModal] = useState<{ open: boolean; classId: string | null }>({
         open: false, classId: null
@@ -209,6 +211,7 @@ export function ProfessorDashboard() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 title: taskTitle,
+                dueDate: taskDueDate || null,
                 classId: selectedClass._id,
             }),
         });
@@ -216,12 +219,14 @@ export function ProfessorDashboard() {
         if (res.ok) {
             toast.success("Task created for all students");
             setTaskTitle("");
+            setTaskDueDate("");
             fetchTasks(selectedClass._id);
         }
     };
 
     const createGroupTask = async (groupId: string) => {
         const title = groupTaskTitles[groupId];
+        const dueDate = groupTaskDueDates[groupId];
         if (!title) return;
 
         const res = await fetch("/api/tasks", {
@@ -229,6 +234,7 @@ export function ProfessorDashboard() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 title,
+                dueDate: dueDate || null,
                 studyGroupId: groupId,
             }),
         });
@@ -236,6 +242,7 @@ export function ProfessorDashboard() {
         if (res.ok && selectedClass) {
             toast.success("Task created for all group members");
             setGroupTaskTitles(prev => ({ ...prev, [groupId]: "" }));
+            setGroupTaskDueDates(prev => ({ ...prev, [groupId]: "" }));
             refreshSelectedClassData(selectedClass._id);
         }
     };
@@ -309,13 +316,41 @@ export function ProfessorDashboard() {
                             </div>
                             <h3>Tasks</h3>
                             <div className="content-card">
-                                <input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder="Task title" />
-                                <button className="button button-primary" onClick={createTask}><Plus size={16} /> Create Task</button>
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                                    <input 
+                                        value={taskTitle} 
+                                        onChange={(e) => setTaskTitle(e.target.value)} 
+                                        placeholder="Task title" 
+                                        style={{ flex: 2, padding: '8px', borderRadius: '4px', background: '#1e293b', color: 'white', border: '1px solid #334155' }}
+                                    />
+                                    <input 
+                                        type="date" 
+                                        value={taskDueDate} 
+                                        onChange={(e) => setTaskDueDate(e.target.value)} 
+                                        style={{ flex: 1, padding: '8px', borderRadius: '4px', background: '#1e293b', color: 'white', border: '1px solid #334155' }}
+                                    />
+                                </div>
+                                <button className="button button-primary" onClick={createTask}>
+                                    <Plus size={16} /> Create Task
+                                </button>
                             </div>
                             {tasks.length === 0 && <p style={{ color: "#94a3b8" }}>No tasks yet.</p>}
-                            {tasks.map((t) => (
-                                <div key={t._id} className="task-item"><div><div>{t.title}</div><small>{t.status}</small></div><button className="button" onClick={() => deleteTask(t._id)}><Trash2 size={14} /></button></div>
+                            {[...tasks].sort((a,b) => {
+                                const dA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+                                const dB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+                                return dA - dB;
+                            }).map((t) => (
+                                <div key={t._id} className="task-item">
+                                    <div>
+                                        <div>{t.title}</div>
+                                        <small>{t.dueDate ? new Date(t.dueDate).toLocaleDateString() : 'No due date'} — {t.status}</small>
+                                    </div>
+                                    <button className="button" onClick={() => deleteTask(t._id)}>
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
                             ))}
+
                             <h3>Groups</h3>
                             <div className="content-card">
                                 <h4>Create Group</h4>
