@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 import { Trash2, RotateCcw, Calendar, MapPin, Users, Clock, Plus } from "lucide-react";
 import "../css/Dashboard.css";
+import { authFetch, clearAuthSession, getAuthUser } from "../lib/auth";
 
 // --- Types ---
 interface Task {
@@ -142,7 +143,7 @@ function EventItem({
   event: Event;
   onRSVP: (eventId: string, status: "accepted" | "declined") => void;
 }) {
-  const userId = localStorage.getItem("userId");
+  const userId = getAuthUser()?.userId;
   const userRsvp = event.rsvps?.find(r => r.userId === userId);
   const isAccepted = userRsvp?.status === "accepted";
 
@@ -683,15 +684,15 @@ export function Dashboard() {
   const [toast, setToast] = useState<string | null>(null);
 
   const fetchAll = async () => {
-    const userId = localStorage.getItem("userId");
+    const userId = getAuthUser()?.userId;
     if (!userId) return;
 
     try {
       const [classRes, groupRes, studentsRes, allClassRes] = await Promise.all([
-        fetch(`/api/classes?userId=${userId}`),
-        fetch(`/api/groups?userId=${userId}`),
-        fetch("/api/users?role=student"),
-        fetch("/api/classes")
+        authFetch(`/api/classes?userId=${userId}`),
+        authFetch(`/api/groups?userId=${userId}`),
+        authFetch("/api/users?role=student"),
+        authFetch("/api/classes")
       ]);
 
       const classData = await classRes.json();
@@ -702,14 +703,14 @@ export function Dashboard() {
       const classesWithData = await Promise.all(
         classData.map(async (cls: Class) => {
           const [taskRes, eventRes] = await Promise.all([
-            fetch(`/api/tasks?userId=${userId}&classId=${cls._id}&studyGroupId=null&isHidden=all`),
-            fetch(`/api/events?classId=${cls._id}`)
+            authFetch(`/api/tasks?userId=${userId}&classId=${cls._id}&studyGroupId=null&isHidden=all`),
+            authFetch(`/api/events?classId=${cls._id}`)
           ]);
           const tasks = await taskRes.json();
           const eventsRaw = await eventRes.json();
           
           const eventsWithRSVPs = await Promise.all(eventsRaw.map(async (event: Event) => {
-            const rsvpRes = await fetch(`/api/events/${event._id}/rsvps`);
+            const rsvpRes = await authFetch(`/api/events/${event._id}/rsvps`);
             return { ...event, rsvps: await rsvpRes.json() };
           }));
 
@@ -720,14 +721,14 @@ export function Dashboard() {
       const groupsWithData = await Promise.all(
         groupData.map(async (group: StudentGroup) => {
           const [taskRes, eventRes] = await Promise.all([
-            fetch(`/api/tasks?userId=${userId}&studyGroupId=${group._id}&isHidden=all`),
-            fetch(`/api/events?studyGroupId=${group._id}`)
+            authFetch(`/api/tasks?userId=${userId}&studyGroupId=${group._id}&isHidden=all`),
+            authFetch(`/api/events?studyGroupId=${group._id}`)
           ]);
           const tasks = await taskRes.json();
           const eventsRaw = await eventRes.json();
 
           const eventsWithRSVPs = await Promise.all(eventsRaw.map(async (event: Event) => {
-            const rsvpRes = await fetch(`/api/events/${event._id}/rsvps`);
+            const rsvpRes = await authFetch(`/api/events/${event._id}/rsvps`);
             return { ...event, rsvps: await rsvpRes.json() };
           }));
 
@@ -756,11 +757,9 @@ export function Dashboard() {
   }, []);
 
   const handleJoinClass = async (classId: string) => {
-    const userId = localStorage.getItem("userId");
-    const res = await fetch(`/api/classes/${classId}/enroll`, {
+    const res = await authFetch(`/api/classes/${classId}/enroll`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
     });
 
     if (res.ok) {
@@ -772,15 +771,14 @@ export function Dashboard() {
   };
 
   const handleCreateGroup = async (name: string, description: string, classId: string) => {
-    const userId = localStorage.getItem("userId");
-    const res = await fetch("/api/groups", {
+    const userId = getAuthUser()?.userId;
+    const res = await authFetch("/api/groups", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
         description,
         classId,
-        createdBy: userId,
         memberIds: [userId], // Auto-add creator as member
       }),
     });
@@ -794,7 +792,7 @@ export function Dashboard() {
   };
 
   const handleAddMemberToGroup = async (groupId: string, userId: string) => {
-    const res = await fetch(`/api/groups/${groupId}/members`, {
+    const res = await authFetch(`/api/groups/${groupId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId }),
@@ -846,7 +844,7 @@ export function Dashboard() {
         };
       })
     );
-    await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
+    await authFetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
   };
 
   const toggleGroupTask = async (groupId: string, taskId: string) => {
@@ -866,7 +864,7 @@ export function Dashboard() {
         };
       })
     );
-    await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
+    await authFetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
   };
 
   const handleToggleHideTask = async (taskId: string) => {
@@ -880,21 +878,19 @@ export function Dashboard() {
       tasks: g.tasks?.map(t => t._id === taskId ? { ...t, isHidden: !t.isHidden } : t)
     })));
 
-    await fetch(`/api/tasks/${taskId}/toggle-hide`, { method: "PATCH" });
+    await authFetch(`/api/tasks/${taskId}/toggle-hide`, { method: "PATCH" });
     showToast("Task updated!");
   };
 
   const handleAddGroupTask = async (groupId: string, title: string) => {
     if (!title) return;
-    const userId = localStorage.getItem("userId");
 
-    const res = await fetch("/api/tasks", {
+    const res = await authFetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title,
         studyGroupId: groupId,
-        userId, 
       }),
     });
 
@@ -906,15 +902,12 @@ export function Dashboard() {
 
   const handleAddTask = async (title: string, dueDate: string) => {
     if (!modalTarget) return;
-    const userId = localStorage.getItem("userId");
-
-    const res = await fetch("/api/tasks", {
+    const res = await authFetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title,
         dueDate,
-        userId,
         classId: modalTarget.type === "class" ? modalTarget.id : null,
       }),
     });
@@ -926,14 +919,11 @@ export function Dashboard() {
   };
 
   const handleRSVP = async (eventId: string, status: "accepted" | "declined") => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
-
     if (status === "accepted") {
-      const res = await fetch(`/api/events/${eventId}/rsvp`, {
+      const res = await authFetch(`/api/events/${eventId}/rsvp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, status }),
+        body: JSON.stringify({ status }),
       });
       if (res.ok) {
         showToast("RSVP confirmed!");
@@ -943,7 +933,10 @@ export function Dashboard() {
         showToast(data.message || "Failed to RSVP");
       }
     } else {
-      const res = await fetch(`/api/events/${eventId}/rsvp/${userId}`, {
+      const userId = getAuthUser()?.userId;
+      if (!userId) return;
+
+      const res = await authFetch(`/api/events/${eventId}/rsvp/${userId}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -955,14 +948,11 @@ export function Dashboard() {
 
   const handleCreateEvent = async (data: Partial<Event>) => {
     if (!modalTarget) return;
-    const userId = localStorage.getItem("userId");
-
-    const res = await fetch("/api/events", {
+    const res = await authFetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...data,
-        createdBy: userId,
         classId: modalTarget.type === "class" ? modalTarget.id : null,
         studyGroupId: modalTarget.type === "group" ? modalTarget.id : null,
       }),
@@ -1018,12 +1008,7 @@ export function Dashboard() {
   const completedTasksCount = allVisibleTasks.filter((t) => t.status === "done").length;
 
   const handleLogout = () => {
-    // Only clear auth-related data, preserve weekly progress
-    localStorage.removeItem("userId");
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userEmail");
+    clearAuthSession();
     window.location.href = "/";
   };
 

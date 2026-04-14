@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { LogOut, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import "../css/ProfessorDashboard.css";
+import { authFetch, clearAuthSession, getAuthUser } from "../lib/auth";
 
 interface User {
     _id: string;
@@ -55,10 +56,10 @@ export function ProfessorDashboard() {
         open: false, classId: null
     });
 
-    const userId = localStorage.getItem("userId");
+    const userId = getAuthUser()?.userId;
 
     const fetchClasses = async () => {
-        const res = await fetch(`/api/classes?professorId=${userId}`);
+        const res = await authFetch(`/api/classes?professorId=${userId}`);
         const data = await res.json();
         if (res.ok) {
             setClasses(data);
@@ -68,7 +69,7 @@ export function ProfessorDashboard() {
     };
 
     const fetchStudents = async () => {
-        const res = await fetch("/api/users?role=student");
+        const res = await authFetch("/api/users?role=student");
         const data = await res.json();
         if (res.ok) {
             setStudents(data);
@@ -79,27 +80,28 @@ export function ProfessorDashboard() {
 
     useEffect(() => {
         if (userId) {
-            fetchClasses();
-            fetchStudents();
+            void (async () => {
+                await Promise.all([fetchClasses(), fetchStudents()]);
+            })();
         }
     }, [userId]);
 
     const fetchTasks = async (classId: string) => {
-        const res = await fetch(`/api/tasks?classId=${classId}&studyGroupId=null`);
+        const res = await authFetch(`/api/tasks?classId=${classId}&studyGroupId=null`);
         const data = await res.json();
         if (res.ok) setTasks(data);
     };
 
     const fetchGroupTasks = async (groupId: string) => {
-        const res = await fetch(`/api/tasks?studyGroupId=${groupId}`);
+        const res = await authFetch(`/api/tasks?studyGroupId=${groupId}`);
         const data = await res.json();
         if (res.ok) setGroupTasks(prev => ({ ...prev, [groupId]: data }));
     };
 
     const refreshSelectedClassData = async (classId: string) => {
         const [classRes, groupsRes] = await Promise.all([
-            fetch(`/api/classes/${classId}`),
-            fetch(`/api/classes/${classId}/groups`)
+            authFetch(`/api/classes/${classId}`),
+            authFetch(`/api/classes/${classId}/groups`)
         ]);
         const fullClass = await classRes.json();
         const groupsData = await groupsRes.json() as Group[];
@@ -119,10 +121,10 @@ export function ProfessorDashboard() {
     const createClass = async () => {
         if (!newCourseCode || !newTitle) return toast.error("Course code and title required");
 
-        const res = await fetch("/api/classes", {
+        const res = await authFetch("/api/classes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ courseCode: newCourseCode, title: newTitle, professorId: userId }),
+            body: JSON.stringify({ courseCode: newCourseCode, title: newTitle }),
         });
 
         if (res.ok) {
@@ -137,7 +139,7 @@ export function ProfessorDashboard() {
     };
 
     const deleteClass = async (classId: string) => {
-        const res = await fetch(`/api/classes/${classId}`, { method: "DELETE" });
+        const res = await authFetch(`/api/classes/${classId}`, { method: "DELETE" });
         if (res.ok) {
             toast.success("Class deleted");
             fetchClasses();
@@ -147,13 +149,12 @@ export function ProfessorDashboard() {
     const createGroup = async () => {
         if (!selectedClass || !newGroupName) return;
 
-        const res = await fetch("/api/groups", {
+        const res = await authFetch("/api/groups", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
                 name: newGroupName, 
                 classId: selectedClass._id, 
-                createdBy: userId,
                 allowStudentTasks: allowStudentTasks 
             }),
         });
@@ -166,7 +167,7 @@ export function ProfessorDashboard() {
     };
 
     const deleteGroup = async (groupId: string) => {
-        const res = await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
+        const res = await authFetch(`/api/groups/${groupId}`, { method: "DELETE" });
         if (res.ok && selectedClass) {
             refreshSelectedClassData(selectedClass._id);
         }
@@ -175,7 +176,7 @@ export function ProfessorDashboard() {
     const addStudent = async () => {
         if (!selectedClass || !selectedStudentId) return;
 
-        const res = await fetch(`/api/classes/${selectedClass._id}/enroll`, {
+        const res = await authFetch(`/api/classes/${selectedClass._id}/enroll`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: selectedStudentId }),
@@ -192,7 +193,7 @@ export function ProfessorDashboard() {
     };
 
     const removeStudent = async (studentId: string) => {
-        const res = await fetch(`/api/classes/${selectedClass!._id}/enroll/${studentId}`, {
+        const res = await authFetch(`/api/classes/${selectedClass!._id}/enroll/${studentId}`, {
             method: "DELETE",
         });
         if (res.ok && selectedClass) {
@@ -203,7 +204,7 @@ export function ProfessorDashboard() {
     const addToGroup = async (groupId: string, memberId: string) => {
         if (!memberId) return;
 
-        const res = await fetch(`/api/groups/${groupId}/members`, {
+        const res = await authFetch(`/api/groups/${groupId}/members`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: memberId }),
@@ -215,7 +216,7 @@ export function ProfessorDashboard() {
     };
 
     const removeFromGroup = async (groupId: string, userId: string) => {
-        const res = await fetch(`/api/groups/${groupId}/members/${userId}`, {
+        const res = await authFetch(`/api/groups/${groupId}/members/${userId}`, {
             method: "DELETE",
         });
         if (res.ok && selectedClass) {
@@ -226,14 +227,13 @@ export function ProfessorDashboard() {
     const createTask = async () => {
         if (!selectedClass || !taskTitle) return;
 
-        const res = await fetch("/api/tasks", {
+        const res = await authFetch("/api/tasks", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 title: taskTitle,
                 dueDate: taskDueDate || null,
                 classId: selectedClass._id,
-                userId: userId, // Include professor's userId
             }),
         });
 
@@ -250,14 +250,13 @@ export function ProfessorDashboard() {
         const dueDate = groupTaskDueDates[groupId];
         if (!title) return;
 
-        const res = await fetch("/api/tasks", {
+        const res = await authFetch("/api/tasks", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 title,
                 dueDate: dueDate || null,
                 studyGroupId: groupId,
-                userId: userId, // Include professor's userId
             }),
         });
 
@@ -270,14 +269,14 @@ export function ProfessorDashboard() {
     };
 
     const deleteTask = async (taskId: string) => {
-        const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+        const res = await authFetch(`/api/tasks/${taskId}`, { method: "DELETE" });
         if (res.ok && selectedClass) {
             fetchTasks(selectedClass._id);
         }
     };
 
     const handleLogout = () => {
-        localStorage.clear();
+        clearAuthSession();
         window.location.href = "/";
     };
 

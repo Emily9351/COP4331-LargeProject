@@ -9,6 +9,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const sendVerificationEmail = require("./utils/SendVerificationEmail");
 const sendPasswordResetEmail = require("./utils/SendPasswordResetEmail");
+const { authenticateToken, signAuthToken } = require("./middleware/auth");
 
 const app = express();
 
@@ -41,6 +42,22 @@ app.use(express.json());
 
 
 connectDB();
+
+function idsMatch(left, right) {
+  return left?.toString() === right?.toString();
+}
+
+function isClassProfessor(cls, userId) {
+  return idsMatch(cls?.professorId, userId);
+}
+
+function isGroupMember(group, userId) {
+  return group.memberIds.some((memberId) => idsMatch(memberId, userId));
+}
+
+function isGroupCreator(group, userId) {
+  return idsMatch(group.createdBy, userId);
+}
 
 // REGISTER
 app.post("/api/register", async (req, res) => {
@@ -121,15 +138,35 @@ app.post("/api/login", async (req, res) => {
       return res.status(403).json({ message: "Please verify your email before logging in" });
     }
 
+    const token = signAuthToken(user);
+
     res.status(200).json({
       message: "Login successful!",
+      token,
       userId: user._id,
       role: user.role || "student",   
-      name: user.name     
+      name: user.name,
+      user: {
+        userId: user._id,
+        role: user.role || "student",
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
+});
+
+app.use("/api", authenticateToken);
+
+app.get("/api/me", async (req, res) => {
+  res.json({
+    userId: req.user._id,
+    role: req.user.role,
+    name: req.user.name,
+    email: req.user.email,
+  });
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,6 +211,10 @@ app.get("/api/users/:id", async (req, res) => {
 //update user
 app.put("/api/users/:id", async (req, res) => {
   try {
+    if (!idsMatch(req.params.id, req.user._id)) {
+      return res.status(403).json({ message: "You can only update your own profile" });
+    }
+
     const { name, email, profilePictureUrl } = req.body;
 
     const user = await User.findByIdAndUpdate(
@@ -194,6 +235,10 @@ app.put("/api/users/:id", async (req, res) => {
 //delete user
 app.delete("/api/users/:id", async (req, res) => {
   try {
+    if (!idsMatch(req.params.id, req.user._id)) {
+      return res.status(403).json({ message: "You can only delete your own account" });
+    }
+
     const user = await User.findByIdAndDelete(req.params.id);
 
     if (!user)
@@ -225,15 +270,18 @@ app.delete("/api/users/:id", async (req, res) => {
 //create class
 app.post("/api/classes", async (req, res) => {
   try {
-    const { courseCode, title, professorId, semester, section } = req.body;
+    const { courseCode, title, semester, section } = req.body;
  
-    if (!courseCode || !title || !professorId)
-      return res.status(400).json({ message: "courseCode, title, and professorId are required" });
+    if (req.user.role !== "professor")
+      return res.status(403).json({ message: "Only professors can create classes" });
+
+    if (!courseCode || !title)
+      return res.status(400).json({ message: "courseCode and title are required" });
  
     const newClass = new Class({
       courseCode,
       title,
-      professorId,
+      professorId: req.user._id,
       studentIds: [],
       semester,
       section,
@@ -251,8 +299,20 @@ app.get("/api/classes", async (req, res) => {
   try {
     const { userId, professorId } = req.query;
     const filter = {};
-    if (userId) filter.studentIds = userId;
-    if (professorId) filter.professorId = professorId;
+
+    if (userId) {
+      if (!idsMatch(userId, req.user._id)) {
+        return res.status(403).json({ message: "Cannot query another user's classes" });
+      }
+      filter.studentIds = req.user._id;
+    }
+
+    if (professorId) {
+      if (req.user.role !== "professor" || !idsMatch(professorId, req.user._id)) {
+        return res.status(403).json({ message: "Cannot query another professor's classes" });
+      }
+      filter.professorId = req.user._id;
+    }
 
     const classes = await Class.find(filter)
       .populate("professorId", "name email");
@@ -283,6 +343,14 @@ app.get("/api/classes/:id", async (req, res) => {
 app.put("/api/classes/:id", async (req, res) => {
   try {
     const { title, semester, section } = req.body;
+
+    const existingClass = await Class.findById(req.params.id);
+    if (!existingClass)
+      return res.status(404).json({ message: "Class not found" });
+
+    if (!isClassProfessor(existingClass, req.user._id)) {
+      return res.status(403).json({ message: "Only the class professor can update this class" });
+    }
  
     const cls = await Class.findByIdAndUpdate(
       req.params.id,
@@ -302,6 +370,15 @@ app.put("/api/classes/:id", async (req, res) => {
 // Delete a class
 app.delete("/api/classes/:id", async (req, res) => {
   try {
+    const existingClass = await Class.findById(req.params.id);
+
+    if (!existingClass)
+      return res.status(404).json({ message: "Class not found" });
+
+    if (!isClassProfessor(existingClass, req.user._id)) {
+      return res.status(403).json({ message: "Only the class professor can delete this class" });
+    }
+
     const cls = await Class.findByIdAndDelete(req.params.id);
  
     if (!cls)
@@ -328,20 +405,35 @@ app.delete("/api/classes/:id", async (req, res) => {
 // Enroll a student in a class
 app.post("/api/classes/:id/enroll", async (req, res) => {
   try {
-    const { userId } = req.body;
+    const requestedUserId = req.body.userId;
  
     const cls = await Class.findById(req.params.id);
     if (!cls)
       return res.status(404).json({ message: "Class not found" });
+
+    const actorIsProfessor = req.user.role === "professor";
+    const targetUserId = actorIsProfessor ? requestedUserId : req.user._id;
+
+    if (actorIsProfessor && !isClassProfessor(cls, req.user._id)) {
+      return res.status(403).json({ message: "Only the class professor can enroll students" });
+    }
+
+    if (!targetUserId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
  
-    const user = await User.findById(userId);
+    const user = await User.findById(targetUserId);
     if (!user)
       return res.status(404).json({ message: "User not found" });
+
+    if (user.role !== "student") {
+      return res.status(400).json({ message: "Only students can be enrolled in classes" });
+    }
  
-    if (cls.studentIds.includes(userId))
+    if (cls.studentIds.some((id) => idsMatch(id, targetUserId)))
       return res.status(400).json({ message: "Student already enrolled" });
  
-    cls.studentIds.push(userId);
+    cls.studentIds.push(targetUserId);
     await cls.save();
  
     user.enrolledClasses.push(req.params.id);
@@ -350,11 +442,11 @@ app.post("/api/classes/:id/enroll", async (req, res) => {
     // Assign existing class-wide (master) tasks to the new student
     const masterTasks = await Task.find({ classId: req.params.id, isMaster: true });
     const taskPromises = masterTasks.map(master => {
-      return new Task({
-        title: master.title,
-        type: master.type,
-        assignedTo: userId,
-        createdBy: master.createdBy,
+        return new Task({
+          title: master.title,
+          type: master.type,
+          assignedTo: targetUserId,
+          createdBy: master.createdBy,
         isMaster: false,
         dueDate: master.dueDate,
         linkedEventId: master.linkedEventId,
@@ -379,6 +471,15 @@ app.delete("/api/classes/:id/enroll/:userId", async (req, res) => {
     const cls = await Class.findById(req.params.id);
     if (!cls)
       return res.status(404).json({ message: "Class not found" });
+
+    const actorIsProfessor = req.user.role === "professor";
+    if (actorIsProfessor) {
+      if (!isClassProfessor(cls, req.user._id)) {
+        return res.status(403).json({ message: "Only the class professor can remove students" });
+      }
+    } else if (!idsMatch(req.params.userId, req.user._id)) {
+      return res.status(403).json({ message: "You can only remove yourself from a class" });
+    }
  
     const user = await User.findById(req.params.userId);
     if (!user)
@@ -407,25 +508,27 @@ app.delete("/api/classes/:id/enroll/:userId", async (req, res) => {
 // Create a group
 app.post("/api/groups", async (req, res) => {
   try {
-    const { name, classId, createdBy, description, isPublic, memberIds, allowStudentTasks } = req.body;
+    const { name, classId, description, isPublic, memberIds, allowStudentTasks } = req.body;
  
     if (!name)
       return res.status(400).json({ message: "Group name is required" });
-
-    if (!createdBy)
-      return res.status(400).json({ message: "Created by is required" });
  
     
     if (classId) { //make sure the class exists
       const cls = await Class.findById(classId);
       if (!cls)
         return res.status(404).json({ message: "Class not found" });
+
+      const canCreateForClass = isClassProfessor(cls, req.user._id) || cls.studentIds.some((id) => idsMatch(id, req.user._id));
+      if (!canCreateForClass) {
+        return res.status(403).json({ message: "You must belong to a class to create a group for it" });
+      }
     }
  
     const group = new StudyGroup({
       name,
       classId: classId || null,
-      createdBy,
+      createdBy: req.user._id,
       memberIds: memberIds || [],
       description: description || "",
       isPublic: isPublic !== undefined ? isPublic : true,
@@ -444,7 +547,12 @@ app.get("/api/groups", async (req, res) => {
   try {
     const { userId } = req.query;
     const filter = {};
-    if (userId) filter.memberIds = userId;
+    if (userId) {
+      if (!idsMatch(userId, req.user._id)) {
+        return res.status(403).json({ message: "Cannot query another user's groups" });
+      }
+      filter.memberIds = req.user._id;
+    }
 
     const groups = await StudyGroup.find(filter)
       .populate("memberIds", "name email")
@@ -477,6 +585,14 @@ app.get("/api/groups/:id", async (req, res) => {
 app.put("/api/groups/:id", async (req, res) => {
   try {
     const { name, description, isPublic, allowStudentTasks } = req.body;
+
+    const existingGroup = await StudyGroup.findById(req.params.id);
+    if (!existingGroup)
+      return res.status(404).json({ message: "Study group not found" });
+
+    if (!isGroupCreator(existingGroup, req.user._id)) {
+      return res.status(403).json({ message: "Only the group creator can update this group" });
+    }
  
     const update = {};
     if (name) update.name = name;
@@ -502,12 +618,18 @@ app.put("/api/groups/:id", async (req, res) => {
 // Delete a group
 app.delete("/api/groups/:id", async (req, res) => {
   try {
-    const group = await StudyGroup.findByIdAndDelete(req.params.id);
+    const group = await StudyGroup.findById(req.params.id);
  
     if (!group)
       return res.status(404).json({ message: "Study group not found" });
+
+    if (!isGroupCreator(group, req.user._id)) {
+      return res.status(403).json({ message: "Only the group creator can delete this group" });
+    }
+
+    await StudyGroup.findByIdAndDelete(req.params.id);
  
-  
+   
     await Task.deleteMany({ studyGroupId: req.params.id });
  
     res.json({ message: "Study group deleted successfully" });
@@ -524,13 +646,23 @@ app.post("/api/groups/:id/members", async (req, res) => {
     const group = await StudyGroup.findById(req.params.id);
     if (!group)
       return res.status(404).json({ message: "Study group not found" });
+
+    let canManageGroup = isGroupCreator(group, req.user._id) || isGroupMember(group, req.user._id);
+    if (group.classId) {
+      const cls = await Class.findById(group.classId);
+      canManageGroup = canManageGroup || isClassProfessor(cls, req.user._id);
+    }
+
+    if (!canManageGroup) {
+      return res.status(403).json({ message: "Not allowed to add members to this group" });
+    }
  
     const user = await User.findById(userId);
     if (!user)
       return res.status(404).json({ message: "User not found" });
  
     
-    if (group.memberIds.includes(userId))
+    if (group.memberIds.some((id) => idsMatch(id, userId)))
       return res.status(400).json({ message: "User is already in this group" });
  
     group.memberIds.push(userId);
@@ -547,6 +679,16 @@ app.delete("/api/groups/:id/members/:userId", async (req, res) => {
     const group = await StudyGroup.findById(req.params.id);
     if (!group)
       return res.status(404).json({ message: "Study group not found" });
+
+    let canManageGroup = isGroupCreator(group, req.user._id) || idsMatch(req.params.userId, req.user._id);
+    if (group.classId) {
+      const cls = await Class.findById(group.classId);
+      canManageGroup = canManageGroup || isClassProfessor(cls, req.user._id);
+    }
+
+    if (!canManageGroup) {
+      return res.status(403).json({ message: "Not allowed to remove members from this group" });
+    }
  
     const user = await User.findById(req.params.userId);
     if (!user)
@@ -586,15 +728,12 @@ app.get("/api/classes/:id/groups", async (req, res) => {
 // Create a task
 app.post("/api/tasks", async (req, res) => {
   try {
-    const { title, type, dueDate, classId, studyGroupId, assignedTo, userId, linkedEventId, priority, notes, tags } = req.body;
+    const { title, type, dueDate, classId, studyGroupId, assignedTo, linkedEventId, priority, notes, tags } = req.body;
  
     if (!title)
       return res.status(400).json({ message: "Task title is required" });
     
-    // The 'userId' in the body represents the person MAKING the request (creator)
-    const creatorId = userId;
-    if (!creatorId)
-      return res.status(400).json({ message: "User ID (creator) is required" });
+    const creatorId = req.user._id;
 
     const creator = await User.findById(creatorId);
     if (!creator)
@@ -606,6 +745,9 @@ app.post("/api/tasks", async (req, res) => {
     if (classId && !studyGroupId && !assignedTo && isProfessor) {
       const cls = await Class.findById(classId);
       if (!cls) return res.status(404).json({ message: "Class not found" });
+      if (!isClassProfessor(cls, creatorId)) {
+        return res.status(403).json({ message: "Only the class professor can create class-wide tasks" });
+      }
 
       // Create a MASTER task (no assignedTo)
       const masterTask = new Task({
@@ -651,6 +793,16 @@ app.post("/api/tasks", async (req, res) => {
       const group = await StudyGroup.findById(studyGroupId);
       if (!group) return res.status(404).json({ message: "Study group not found" });
 
+      let canManageGroup = isGroupCreator(group, creatorId);
+      if (group.classId) {
+        const cls = await Class.findById(group.classId);
+        canManageGroup = canManageGroup || isClassProfessor(cls, creatorId);
+      }
+
+      if (!canManageGroup) {
+        return res.status(403).json({ message: "Not allowed to create tasks for this group" });
+      }
+
       // Create a MASTER task (no assignedTo)
       const masterTask = new Task({
         title,
@@ -691,7 +843,34 @@ app.post("/api/tasks", async (req, res) => {
       return res.status(201).json({ message: "Master group task created and distributed", masterTask });
     }
 
-    const finalAssignedTo = assignedTo || userId;
+    if (assignedTo && req.user.role !== "professor" && !idsMatch(assignedTo, req.user._id)) {
+      return res.status(403).json({ message: "Students can only create tasks for themselves" });
+    }
+
+    if (classId) {
+      const cls = await Class.findById(classId);
+      if (!cls) return res.status(404).json({ message: "Class not found" });
+
+      const canAccessClass = isClassProfessor(cls, creatorId) || cls.studentIds.some((id) => idsMatch(id, creatorId));
+      if (!canAccessClass) {
+        return res.status(403).json({ message: "Not allowed to create tasks for this class" });
+      }
+    }
+
+    if (studyGroupId) {
+      const group = await StudyGroup.findById(studyGroupId);
+      if (!group) return res.status(404).json({ message: "Study group not found" });
+
+      if (!isGroupMember(group, creatorId) && !isGroupCreator(group, creatorId)) {
+        return res.status(403).json({ message: "You must belong to a study group to create tasks for it" });
+      }
+
+      if (!group.allowStudentTasks && req.user.role !== "professor") {
+        return res.status(403).json({ message: "Students cannot add tasks to this group" });
+      }
+    }
+
+    const finalAssignedTo = assignedTo || req.user._id;
     if (!finalAssignedTo)
       return res.status(400).json({ message: "Assigned user is required" });
 
@@ -734,7 +913,13 @@ app.get("/api/tasks", async (req, res) => {
 
     if (status) filter.status = status;
     if (assignedTo || userId) {
-      filter.assignedTo = assignedTo || userId;
+      const requestedAssignedTo = assignedTo || userId;
+      if (req.user.role !== "professor" && !idsMatch(requestedAssignedTo, req.user._id)) {
+        return res.status(403).json({ message: "Cannot query another user's tasks" });
+      }
+      filter.assignedTo = requestedAssignedTo;
+    } else if (req.user.role !== "professor") {
+      filter.assignedTo = req.user._id;
     } else if (classId || studyGroupId) {
       // If fetching for a class/group but no user specified, 
       // return only master tasks (to avoid duplicates in professor view)
@@ -783,10 +968,21 @@ app.get("/api/tasks/:id", async (req, res) => {
 app.put("/api/tasks/:id", async (req, res) => {
   try {
     const { title, type, assignedTo, dueDate, priority, notes, tags, status  } = req.body;
+
+    const existingTask = await Task.findById(req.params.id);
+    if (!existingTask)
+      return res.status(404).json({ message: "Task not found" });
+
+    const canEditTask = idsMatch(existingTask.createdBy, req.user._id) || idsMatch(existingTask.assignedTo, req.user._id);
+    if (!canEditTask) {
+      return res.status(403).json({ message: "Not allowed to update this task" });
+    }
+
+    const nextAssignedTo = assignedTo && req.user.role === "professor" ? assignedTo : existingTask.assignedTo;
  
     const task = await Task.findByIdAndUpdate(
       req.params.id,
-      { title, type, assignedTo,dueDate, priority, notes, tags, status },
+      { title, type, assignedTo: nextAssignedTo, dueDate, priority, notes, tags, status },
       { new: true }
     );
  
@@ -805,6 +1001,11 @@ app.patch("/api/tasks/:id/toggle", async (req, res) => {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ message: "Task not found" });
 
+    const canToggleTask = idsMatch(task.assignedTo, req.user._id) || idsMatch(task.createdBy, req.user._id);
+    if (!canToggleTask) {
+      return res.status(403).json({ message: "Not allowed to update this task" });
+    }
+
     task.status = task.status === "done" ? "todo" : "done";
     await task.save();
 
@@ -820,6 +1021,11 @@ app.patch("/api/tasks/:id/toggle-hide", async (req, res) => {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ message: "Task not found" });
 
+    const canToggleTask = idsMatch(task.assignedTo, req.user._id) || idsMatch(task.createdBy, req.user._id);
+    if (!canToggleTask) {
+      return res.status(403).json({ message: "Not allowed to update this task" });
+    }
+
     task.isHidden = !task.isHidden;
     await task.save();
 
@@ -834,6 +1040,11 @@ app.delete("/api/tasks/:id", async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ message: "Task not found" });
+
+    const canDeleteTask = idsMatch(task.createdBy, req.user._id) || idsMatch(task.assignedTo, req.user._id);
+    if (!canDeleteTask) {
+      return res.status(403).json({ message: "Not allowed to delete this task" });
+    }
 
     // If deleting a master task, delete all student copies
     if (task.isMaster) {
@@ -860,25 +1071,30 @@ app.delete("/api/tasks/:id", async (req, res) => {
 // Create an event
 app.post("/api/events", async (req, res) => {
   try {
-    const { title, description, type, createdBy, classId, studyGroupId, startTime, endTime, location, meetingLink } = req.body;
+    const { title, description, type, classId, studyGroupId, startTime, endTime, location, meetingLink } = req.body;
  
-    if (!title || !createdBy || !startTime || !endTime ) 
-      return res.status(400).json({ message: "title, createdBy startTime, endTime are required" });
-
-    const user = await User.findById(createdBy);
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
+    if (!title || !startTime || !endTime ) 
+      return res.status(400).json({ message: "title, startTime, endTime are required" });
 
     if (classId) { //make sure the class exists
       const cls = await Class.findById(classId);
       if (!cls)
         return res.status(404).json({ message: "Class not found" });
+
+      const canCreateForClass = isClassProfessor(cls, req.user._id) || cls.studentIds.some((id) => idsMatch(id, req.user._id));
+      if (!canCreateForClass) {
+        return res.status(403).json({ message: "Not allowed to create events for this class" });
+      }
     }
 
     if (studyGroupId) { //make sure the study group exists
       const group = await StudyGroup.findById(studyGroupId);
       if (!group)
         return res.status(404).json({ message: "Study group not found" });
+
+      if (!isGroupMember(group, req.user._id) && !isGroupCreator(group, req.user._id)) {
+        return res.status(403).json({ message: "Not allowed to create events for this group" });
+      }
     }
  
     const event = new Event({
@@ -886,7 +1102,7 @@ app.post("/api/events", async (req, res) => {
       description: description || null,
       type: type || "study session",
       location: location || "",
-      createdBy,
+      createdBy: req.user._id,
       classId: classId || null,
       studyGroupId: studyGroupId || null,
       startTime,
@@ -944,6 +1160,14 @@ app.get("/api/events/:id", async (req, res) => {
 app.put("/api/events/:id", async (req, res) => {
   try {
     const { title, description, type, startTime, endTime, location, meetingLink } = req.body;
+
+    const existingEvent = await Event.findById(req.params.id);
+    if (!existingEvent)
+      return res.status(404).json({ message: "Event not found" });
+
+    if (!idsMatch(existingEvent.createdBy, req.user._id)) {
+      return res.status(403).json({ message: "Only the event creator can update this event" });
+    }
  
     const event = await Event.findByIdAndUpdate(
       req.params.id,
@@ -963,6 +1187,15 @@ app.put("/api/events/:id", async (req, res) => {
 // Delete an event
 app.delete("/api/events/:id", async (req, res) => {
   try {
+    const existingEvent = await Event.findById(req.params.id);
+
+    if (!existingEvent)
+      return res.status(404).json({ message: "Event not found" });
+
+    if (!idsMatch(existingEvent.createdBy, req.user._id)) {
+      return res.status(403).json({ message: "Only the event creator can delete this event" });
+    }
+
     const event = await Event.findByIdAndDelete(req.params.id);
  
     if (!event)
@@ -984,10 +1217,11 @@ app.delete("/api/events/:id", async (req, res) => {
 // RSVP to an event
 app.post("/api/events/:id/rsvp", async (req, res) => {
   try {
-    const { userId, status } = req.body;
+    const { status } = req.body;
+    const userId = req.user._id;
  
-    if (!userId || !status)
-      return res.status(400).json({ message: "userId and status are required" });
+    if (!status)
+      return res.status(400).json({ message: "status is required" });
  
     if (!["accepted", "declined", "tentative"].includes(status))
       return res.status(400).json({ message: "status must be accepted, declined, or tentative" });
@@ -995,10 +1229,6 @@ app.post("/api/events/:id/rsvp", async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event)
       return res.status(404).json({ message: "Event not found" });
- 
-    const user = await User.findById(userId);
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
  
     // Check if user already RSVPed
     const existingRsvp = await RSVP.findOne({ userId, eventId: req.params.id });
@@ -1023,6 +1253,10 @@ app.post("/api/events/:id/rsvp", async (req, res) => {
 app.put("/api/events/:id/rsvp/:userId", async (req, res) => {
   try {
     const { status } = req.body;
+
+    if (!idsMatch(req.params.userId, req.user._id)) {
+      return res.status(403).json({ message: "You can only update your own RSVP" });
+    }
  
     if (!status)
       return res.status(400).json({ message: "status is required" });
@@ -1048,6 +1282,10 @@ app.put("/api/events/:id/rsvp/:userId", async (req, res) => {
 // Cancel an RSVP
 app.delete("/api/events/:id/rsvp/:userId", async (req, res) => {
   try {
+    if (!idsMatch(req.params.userId, req.user._id)) {
+      return res.status(403).json({ message: "You can only cancel your own RSVP" });
+    }
+
     const rsvp = await RSVP.findOneAndDelete({
       userId: req.params.userId,
       eventId: req.params.id,
@@ -1081,6 +1319,10 @@ app.get("/api/events/:id/rsvps", async (req, res) => {
 // Get all events a user RSVPed to
 app.get("/api/users/:id/rsvps", async (req, res) => {
   try {
+    if (!idsMatch(req.params.id, req.user._id)) {
+      return res.status(403).json({ message: "You can only view your own RSVPs" });
+    }
+
     const user = await User.findById(req.params.id);
     if (!user)
       return res.status(404).json({ message: "User not found" });

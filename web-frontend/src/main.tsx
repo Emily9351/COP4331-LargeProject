@@ -8,17 +8,18 @@ import { Dashboard } from './pages/Dashboard';
 import { ProfessorDashboard } from './pages/ProfessorDashboard';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { ProtectedRoute, PublicOnlyRoute } from './components/RouteGuards';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/registration" element={<Registration />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/professor-dashboard" element={<ProfessorDashboard />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+        <Route path="/registration" element={<PublicOnlyRoute><Registration /></PublicOnlyRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute allowedRole="student"><Dashboard /></ProtectedRoute>} />
+        <Route path="/professor-dashboard" element={<ProtectedRoute allowedRole="professor"><ProfessorDashboard /></ProtectedRoute>} />
+        <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
+        <Route path="/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
