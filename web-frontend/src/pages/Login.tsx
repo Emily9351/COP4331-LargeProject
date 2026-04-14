@@ -35,6 +35,7 @@ export function Login() {
             localStorage.setItem("name", data.name); 
 
             console.log("Login successful", data);
+            console.log("LOGIN DATA:", data);
 
             if (data.role === "professor") {
                 navigate("/professor-dashboard");
