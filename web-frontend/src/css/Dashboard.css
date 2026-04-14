@@ -125,6 +125,7 @@ html, body {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   padding: 1.25rem 1.5rem 1.5rem;
   overflow: hidden;
+  background: #f1ffa6
 }
 
 .card h2 {
