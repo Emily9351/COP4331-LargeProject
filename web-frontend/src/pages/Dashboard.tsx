@@ -407,7 +407,7 @@ export function Dashboard() {
 
         const classesWithTasks = await Promise.all(
           classData.map(async (cls: Class) => {
-            const taskRes = await fetch(`/api/tasks?userId=${userId}&classId=${cls._id}`);
+            const taskRes = await fetch(`/api/tasks?userId=${userId}&classId=${cls._id}&studyGroupId=null`);
             return { ...cls, tasks: await taskRes.json() };
           })
         );

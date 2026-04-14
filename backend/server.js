@@ -565,13 +565,13 @@ app.get("/api/classes/:id/groups", async (req, res) => {
 // Create a task
 app.post("/api/tasks", async (req, res) => {
   try {
-    const { title, type, dueDate, classId, assignedTo, userId, linkedEventId, priority, notes, tags } = req.body;
+    const { title, type, dueDate, classId, studyGroupId, assignedTo, userId, linkedEventId, priority, notes, tags } = req.body;
  
     if (!title)
       return res.status(400).json({ message: "Task title is required" });
     
     // If it's a class-wide task created by a professor (no specific assignedTo)
-    if (classId && !assignedTo && !userId) {
+    if (classId && !studyGroupId && !assignedTo && !userId) {
       const cls = await Class.findById(classId);
       if (!cls) return res.status(404).json({ message: "Class not found" });
 
@@ -594,6 +594,31 @@ app.post("/api/tasks", async (req, res) => {
       return res.status(201).json({ message: "Tasks created for all students", count: tasks.length });
     }
 
+    // Handle Study Group tasks - Create for all group members if no specific assignee
+    if (studyGroupId && !assignedTo && !userId) {
+      const group = await StudyGroup.findById(studyGroupId);
+      if (!group) return res.status(404).json({ message: "Study group not found" });
+
+      const taskPromises = group.memberIds.map(memberId => {
+        return new Task({
+          title,
+          type: type || "assignment",
+          assignedTo: memberId,
+          dueDate: dueDate || null,
+          linkedEventId: linkedEventId || null,
+          classId: classId || group.classId,
+          studyGroupId: studyGroupId,
+          priority: priority || "medium",
+          status: "todo",
+          notes: notes || "",
+          tags: tags || [],
+        }).save();
+      });
+
+      const tasks = await Promise.all(taskPromises);
+      return res.status(201).json({ message: "Group tasks created for all members", count: tasks.length });
+    }
+
     const finalAssignedTo = assignedTo || userId;
     if (!finalAssignedTo)
       return res.status(400).json({ message: "Assigned user is required" });
@@ -605,6 +630,7 @@ app.post("/api/tasks", async (req, res) => {
       dueDate: dueDate || null,
       linkedEventId: linkedEventId || null,
       classId: classId || null,
+      studyGroupId: studyGroupId || null,
       priority: priority || "medium",
       status: "todo",
       notes: notes || "",
@@ -621,17 +647,24 @@ app.post("/api/tasks", async (req, res) => {
 // Get all tasks
 app.get("/api/tasks", async (req, res) => {
   try {
-    const { classId, status, userId, assignedTo } = req.query;
+    const { classId, studyGroupId, status, userId, assignedTo } = req.query;
  
     const filter = {};
  
     if (classId) filter.classId = classId;
+    if (studyGroupId) filter.studyGroupId = studyGroupId;
+    // If we want ONLY tasks without a study group when classId is passed, 
+    // we should explicitly handle that, but let's see if the user wants strict isolation.
+    // If studyGroupId is 'null' (string from query), we filter for null.
+    if (studyGroupId === 'null') filter.studyGroupId = null;
+
     if (status) filter.status = status;
     if (assignedTo || userId) filter.assignedTo = assignedTo || userId;
    
  
     const tasks = await Task.find(filter)
       .populate("classId", "courseCode title")
+      .populate("studyGroupId", "name")
       .populate("assignedTo", "name email")
       .sort({ dueDate: 1 });
  

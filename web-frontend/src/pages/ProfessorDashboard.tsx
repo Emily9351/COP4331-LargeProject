@@ -85,7 +85,7 @@ export function ProfessorDashboard() {
 
     /* ===== FETCH TASKS ===== */
     const fetchTasks = async (classId: string) => {
-        const res = await fetch(`/api/tasks?classId=${classId}`);
+        const res = await fetch(`/api/tasks?classId=${classId}&studyGroupId=null`);
         const data = await res.json();
         if (res.ok) setTasks(data);
     };
