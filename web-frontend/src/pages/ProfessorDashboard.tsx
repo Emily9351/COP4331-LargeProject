@@ -197,13 +197,12 @@ export function ProfessorDashboard() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 title: taskTitle,
-                assignedTo: userId,   // ✅ backend requires this field
                 classId: selectedClass._id,
             }),
         });
 
         if (res.ok) {
-            toast.success("Task created");
+            toast.success("Task created for all students");
             setTaskTitle("");
             fetchTasks(selectedClass._id);
         }

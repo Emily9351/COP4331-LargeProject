@@ -561,15 +561,38 @@ app.get("/api/classes/:id/groups", async (req, res) => {
 // Create a task
 app.post("/api/tasks", async (req, res) => {
   try {
-    const { title, type, dueDate, classId,  assignedTo, userId, linkedEventId, priority, notes, tags } = req.body;
+    const { title, type, dueDate, classId, assignedTo, userId, linkedEventId, priority, notes, tags } = req.body;
  
     if (!title)
       return res.status(400).json({ message: "Task title is required" });
     
+    // If it's a class-wide task created by a professor (no specific assignedTo)
+    if (classId && !assignedTo && !userId) {
+      const cls = await Class.findById(classId);
+      if (!cls) return res.status(404).json({ message: "Class not found" });
+
+      const taskPromises = cls.studentIds.map(studentId => {
+        return new Task({
+          title,
+          type: type || "assignment",
+          assignedTo: studentId,
+          dueDate: dueDate || null,
+          linkedEventId: linkedEventId || null,
+          classId: classId,
+          priority: priority || "medium",
+          status: "todo",
+          notes: notes || "",
+          tags: tags || [],
+        }).save();
+      });
+
+      const tasks = await Promise.all(taskPromises);
+      return res.status(201).json({ message: "Tasks created for all students", count: tasks.length });
+    }
+
     const finalAssignedTo = assignedTo || userId;
     if (!finalAssignedTo)
       return res.status(400).json({ message: "Assigned user is required" });
-
 
     const task = new Task({
       title,
