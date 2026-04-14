@@ -1044,12 +1044,12 @@ export function Dashboard() {
 
         <div className="dashboard-content">
           <div className="cards-grid">
-            <div className="card house-card" style={{background:'#f1ffa6'}}>
+            <div className="card house-card" style={{background:'rgb(241, 255, 166)'}}>
               <h2>Weekly Progress Adventure</h2>
               <div className="subtitle">Complete tasks to add balloons! Resets every Sunday.</div>
               <HouseWithBalloons count={weeklyCount} />
             </div>
-            <div className="card badge-card" style={{background:'#f1ffa6'}}>
+            <div className="card badge-card" style={{background:'rgb(241, 255, 166)'}}>
               <h2>Achievement Badges</h2>
               <div className="subtitle">Earn badges by completing tasks each week!</div>
               <BadgeSash earnedBadges={earnedBadges} currentWeekTasks={weeklyCount} />
@@ -1113,7 +1113,7 @@ export function Dashboard() {
               <div className="tab-content-grid">
                 {availableClasses.length === 0 && <p className="empty-msg">No new classes available to join.</p>}
                 {availableClasses.map((cls) => (
-                  <div key={cls._id} className="content-card">
+                  <div key={cls._id} className="content-card" style={{background: 'rgb(241, 255, 166)'}}>
                      <div className="content-card-header">
                         <div><h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3><p className="content-card-meta">{cls.semester}</p></div>
                         <button className="button button-primary" onClick={() => handleJoinClass(cls._id)}>Join</button>

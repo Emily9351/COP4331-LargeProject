@@ -508,7 +508,7 @@ html, body {
 /* ── Content cards (class/group) ── */
 .content-card {
   background: rgb(241, 255, 166);
-  border: 2px solid #1e3a8a;
+  border: 3px solid #1e3a8a;
   border-radius: 10px;
   box-shadow: 0 3px 10px rgba(30, 58, 138, 0.2);
   overflow: hidden;
