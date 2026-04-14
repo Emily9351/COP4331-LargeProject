@@ -1067,7 +1067,7 @@ export function Dashboard() {
             <div className="tabs-header">
               <button className={`tab-btn ${activeTab === "classes" ? "tab-active" : ""}`} onClick={() => setActiveTab("classes")}>📚 My Classes</button>
               <button className={`tab-btn ${activeTab === "groups" ? "tab-active" : ""}`} onClick={() => setActiveTab("groups")}>👥 My Groups</button>
-              <button className={`tab-btn ${activeTab === "browse" ? "tab-active" : ""}`} onClick={() => setActiveTab("browse")}>🔍 Browse Classes</button>
+
             </div>
 
             {activeTab === "classes" && (
