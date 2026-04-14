@@ -5,6 +5,7 @@ import './index.css';
 import { Login } from './pages/Login';
 import { Registration } from './pages/Registration';
 import { Dashboard } from './pages/Dashboard';
+import { ProfessorDashboard } from './pages/ProfessorDashboard';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/" element={<Login />} />
         <Route path="/registration" element={<Registration />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/professor-dashboard" element={<ProfessorDashboard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>

@@ -31,10 +31,19 @@ export function Login() {
             const data = await response.json();
 
             localStorage.setItem("userId", data.userId); 
+            localStorage.setItem("role", data.role);
+            localStorage.setItem("name", data.name); 
+
             console.log("Login successful", data);
 
-            // Redirect to dashboard
-            navigate("/dashboard");
+            if (data.role === "professor") {
+                navigate("/professor-dashboard");
+            } else if (data.role === "student") {
+                navigate("/student-dashboard");
+            } else {
+                navigate("/dashboard"); 
+            }
+
         } catch (err) {
             console.error("Login error:", err);
             setError("Server unreachable or network error");
