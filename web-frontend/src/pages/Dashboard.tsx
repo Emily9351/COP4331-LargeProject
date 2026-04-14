@@ -405,9 +405,9 @@ function CreateEventModal({
           <option value="social">Social</option>
           <option value="other">Other</option>
         </select>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ fontSize: '0.7rem', color: '#6b7280' }}>Start Time</label>
+        <div className="modal-datetime-container">
+          <div className="modal-datetime-field">
+            <label className="modal-datetime-label">Start Time</label>
             <input
               className="modal-input"
               type="datetime-local"
@@ -415,8 +415,8 @@ function CreateEventModal({
               onChange={(e) => setStartTime(e.target.value)}
             />
           </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ fontSize: '0.7rem', color: '#6b7280' }}>End Time</label>
+          <div className="modal-datetime-field">
+            <label className="modal-datetime-label">End Time</label>
             <input
               className="modal-input"
               type="datetime-local"
@@ -1090,7 +1090,7 @@ export function Dashboard() {
 
             {activeTab === "groups" && (
               <div className="tab-content-grid">
-                <div className="content-card create-group-card">
+                <div className="content-card create-group-card" style={{background: 'rgb(244,255,166)'}}>
                     <h3>Start a Study Group</h3>
                     <button className="button button-primary" onClick={() => setShowCreateGroup(true)}>Create Group</button>
                 </div>
