@@ -282,7 +282,7 @@ html, body {
 }
 
 .badge-earned {
-  background: linear-gradient(135deg, #ffc107, #ffb300);
+  background: linear-gradient(135deg, #c5e9ff, #c5e9ff);
   border-color: #1e3a8a;
 }
 
@@ -298,7 +298,7 @@ html, body {
 .badge-name {
   font-size: 0.625rem;
   font-weight: 600;
-  color: #1e3a8a;
+  color: #000000;
   line-height: 1.2;
 }
 
