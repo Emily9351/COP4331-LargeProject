@@ -207,7 +207,7 @@ function ClassCard({
   const visibleTasks = cls.tasks.filter(t => !t.isHidden);
   const completed = visibleTasks.filter((t) => t.status === "done").length;
   return (
-    <div className="content-card">
+    <div className="content-card" style={{background: 'rgb(241, 255, 166)'}}>
       <div className="content-card-header">
         <div>
           <h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3>
@@ -264,7 +264,7 @@ function GroupCard({
   const visibleTasks = group.tasks?.filter(t => !t.isHidden) || [];
 
   return (
-    <div className="content-card">
+    <div className="content-card" style={{background: 'rgb(241, 255, 166)'}}>
       <div className="content-card-header">
         <div>
           <h3 className="content-card-title">{group.name}</h3>
