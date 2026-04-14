@@ -47,6 +47,10 @@ const TaskSchema = new mongoose.Schema(
       enum: ["todo", "in_progress", "done"],
       default: "todo",
     },
+    isHidden: {
+      type: Boolean,
+      default: false,
+    },
     tags: [
       {
         type: String,

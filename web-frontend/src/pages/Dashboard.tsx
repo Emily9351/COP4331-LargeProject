@@ -13,6 +13,7 @@ interface Task {
   type: string;
   classId?: string;
   studyGroupId?: string;
+  isHidden: boolean;
 }
 
 interface Class {
@@ -67,9 +68,11 @@ function getWeekStart(date: Date): Date {
 function TaskItem({
   task,
   onToggle,
+  onToggleHide,
 }: {
   task: Task;
   onToggle: () => void;
+  onToggleHide: () => void;
 }) {
   const isDone = task.status === "done";
   return (
@@ -87,6 +90,18 @@ function TaskItem({
         </span>
         <span className="task-due">Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}</span>
       </div>
+      {(isDone || task.isHidden) && (
+        <button 
+          className="button" 
+          style={{ padding: '2px 8px', fontSize: '0.7rem', marginLeft: 'auto' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleHide();
+          }}
+        >
+          {task.isHidden ? "Restore" : "Hide"}
+        </button>
+      )}
     </div>
   );
 }
@@ -95,24 +110,32 @@ function ClassCard({
   cls,
   onToggleTask,
   onAddTask,
+  onToggleHide,
 }: {
   cls: Class;
   onToggleTask: (taskId: string) => void;
   onAddTask: () => void;
+  onToggleHide: (taskId: string) => void;
 }) {
-  const completed = cls.tasks.filter((t) => t.status === "done").length;
+  const visibleTasks = cls.tasks.filter(t => !t.isHidden);
+  const completed = visibleTasks.filter((t) => t.status === "done").length;
   return (
     <div className="content-card">
       <div className="content-card-header">
         <div>
           <h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3>
-          <span className="content-card-meta">{completed}/{cls.tasks.length} tasks complete</span>
+          <span className="content-card-meta">{completed}/{visibleTasks.length} tasks complete</span>
         </div>
         <button className="add-task-btn" onClick={onAddTask} title="Add task">+</button>
       </div>
       <div className="task-list">
-        {cls.tasks.map((task) => (
-          <TaskItem key={task._id} task={task} onToggle={() => onToggleTask(task._id)} />
+        {visibleTasks.map((task) => (
+          <TaskItem 
+            key={task._id} 
+            task={task} 
+            onToggle={() => onToggleTask(task._id)} 
+            onToggleHide={() => onToggleHide(task._id)}
+          />
         ))}
       </div>
     </div>
@@ -125,15 +148,18 @@ function GroupCard({
   onAddMember,
   onToggleTask,
   onAddTask,
+  onToggleHide,
 }: {
   group: StudentGroup;
   allStudents: { _id: string; name: string; email: string }[];
   onAddMember: (groupId: string, userId: string) => void;
   onToggleTask: (groupId: string, taskId: string) => void;
   onAddTask: (groupId: string, title: string) => void;
+  onToggleHide: (groupId: string, taskId: string) => void;
 }) {
   const isProfessorCreated = group.createdBy?.role === "professor";
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const visibleTasks = group.tasks?.filter(t => !t.isHidden) || [];
 
   return (
     <div className="content-card">
@@ -150,9 +176,14 @@ function GroupCard({
       <div className="group-section">
         <h4 style={{ margin: '15px 0 10px' }}>Group Tasks</h4>
         <div className="task-list">
-          {(!group.tasks || group.tasks.length === 0) && <p className="empty-msg">No tasks for this group.</p>}
-          {group.tasks?.map((task) => (
-            <TaskItem key={task._id} task={task} onToggle={() => onToggleTask(group._id, task._id)} />
+          {visibleTasks.length === 0 && <p className="empty-msg">No tasks for this group.</p>}
+          {visibleTasks.map((task) => (
+            <TaskItem 
+              key={task._id} 
+              task={task} 
+              onToggle={() => onToggleTask(group._id, task._id)} 
+              onToggleHide={() => onToggleHide(group._id, task._id)}
+            />
           ))}
         </div>
 
@@ -545,6 +576,21 @@ export function Dashboard() {
     await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
   };
 
+  const handleToggleHideTask = async (taskId: string) => {
+    // Optimistic update
+    setClasses(prev => prev.map(c => ({
+      ...c,
+      tasks: c.tasks.map(t => t._id === taskId ? { ...t, isHidden: !t.isHidden } : t)
+    })));
+    setGroups(prev => prev.map(g => ({
+      ...g,
+      tasks: g.tasks?.map(t => t._id === taskId ? { ...t, isHidden: !t.isHidden } : t)
+    })));
+
+    await fetch(`/api/tasks/${taskId}/toggle-hide`, { method: "PATCH" });
+    showToast("Task updated!");
+  };
+
   const handleAddGroupTask = async (groupId: string, title: string) => {
     if (!title) return;
     const userId = localStorage.getItem("userId");
@@ -673,7 +719,13 @@ export function Dashboard() {
               <div className="tab-content-grid">
                 {classes.length === 0 && <p className="empty-msg">You are not enrolled in any classes yet.</p>}
                 {classes.map((cls) => (
-                  <ClassCard key={cls._id} cls={cls} onToggleTask={(taskId) => toggleClassTask(cls._id, taskId)} onAddTask={() => openModal("class", cls._id)} />
+                  <ClassCard 
+                    key={cls._id} 
+                    cls={cls} 
+                    onToggleTask={(taskId) => toggleClassTask(cls._id, taskId)} 
+                    onAddTask={() => openModal("class", cls._id)}
+                    onToggleHide={handleToggleHideTask}
+                  />
                 ))}
               </div>
             )}
@@ -685,7 +737,15 @@ export function Dashboard() {
                     <button className="button button-primary" onClick={() => setShowCreateGroup(true)}>Create Group</button>
                 </div>
                 {groups.map((group) => (
-                  <GroupCard key={group._id} group={group} allStudents={allStudents} onAddMember={handleAddMemberToGroup} onToggleTask={toggleGroupTask} onAddTask={handleAddGroupTask} />
+                  <GroupCard 
+                    key={group._id} 
+                    group={group} 
+                    allStudents={allStudents} 
+                    onAddMember={handleAddMemberToGroup} 
+                    onToggleTask={toggleGroupTask} 
+                    onAddTask={handleAddGroupTask}
+                    onToggleHide={(gid, tid) => handleToggleHideTask(tid)}
+                  />
                 ))}
               </div>
             )}
@@ -704,6 +764,32 @@ export function Dashboard() {
               </div>
             )}
           </div>
+
+          {/* Archived Tasks Section */}
+          {(classes.some(c => c.tasks.some(t => t.isHidden)) || groups.some(g => g.tasks?.some(t => t.isHidden))) && (
+            <div className="content-card" style={{ marginTop: '30px', background: 'rgba(255, 255, 255, 0.05)' }}>
+              <h3 className="content-card-title" style={{ padding: '20px 20px 0' }}>📦 Archived Tasks</h3>
+              <p className="content-card-meta" style={{ padding: '0 20px 15px' }}>Tasks you've hidden. You can restore them at any time.</p>
+              <div className="task-list" style={{ padding: '0 20px 20px' }}>
+                {classes.map(c => c.tasks.filter(t => t.isHidden).map(t => (
+                  <TaskItem 
+                    key={t._id} 
+                    task={t} 
+                    onToggle={() => toggleClassTask(c._id, t._id)} 
+                    onToggleHide={() => handleToggleHideTask(t._id)} 
+                  />
+                )))}
+                {groups.map(g => g.tasks?.filter(t => t.isHidden).map(t => (
+                  <TaskItem 
+                    key={t._id} 
+                    task={t} 
+                    onToggle={() => toggleGroupTask(g._id, t._id)} 
+                    onToggleHide={() => handleToggleHideTask(t._id)} 
+                  />
+                )))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

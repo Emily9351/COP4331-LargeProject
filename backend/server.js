@@ -570,8 +570,12 @@ app.post("/api/tasks", async (req, res) => {
     if (!title)
       return res.status(400).json({ message: "Task title is required" });
     
+    const creatorId = userId || assignedTo;
+    const creator = creatorId ? await User.findById(creatorId) : null;
+    const isProfessor = creator && creator.role === "professor";
+
     // If it's a class-wide task created by a professor (no specific assignedTo)
-    if (classId && !studyGroupId && !assignedTo && !userId) {
+    if (classId && !studyGroupId && !assignedTo && isProfessor) {
       const cls = await Class.findById(classId);
       if (!cls) return res.status(404).json({ message: "Class not found" });
 
@@ -594,8 +598,8 @@ app.post("/api/tasks", async (req, res) => {
       return res.status(201).json({ message: "Tasks created for all students", count: tasks.length });
     }
 
-    // Handle Study Group tasks - Create for all group members if no specific assignee
-    if (studyGroupId && !assignedTo && !userId) {
+    // Handle Study Group tasks - Create for all group members if no specific assignee AND created by professor
+    if (studyGroupId && !assignedTo && isProfessor) {
       const group = await StudyGroup.findById(studyGroupId);
       if (!group) return res.status(404).json({ message: "Study group not found" });
 
@@ -660,6 +664,13 @@ app.get("/api/tasks", async (req, res) => {
 
     if (status) filter.status = status;
     if (assignedTo || userId) filter.assignedTo = assignedTo || userId;
+    
+    // Filter by isHidden (default to false if not specified)
+    if (req.query.isHidden !== undefined) {
+      filter.isHidden = req.query.isHidden === 'true';
+    } else {
+      filter.isHidden = false;
+    }
    
  
     const tasks = await Task.find(filter)
@@ -717,6 +728,21 @@ app.patch("/api/tasks/:id/toggle", async (req, res) => {
     if (!task) return res.status(404).json({ message: "Task not found" });
 
     task.status = task.status === "done" ? "todo" : "done";
+    await task.save();
+
+    res.json(task);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Toggle task hidden status (soft delete)
+app.patch("/api/tasks/:id/toggle-hide", async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    task.isHidden = !task.isHidden;
     await task.save();
 
     res.json(task);
