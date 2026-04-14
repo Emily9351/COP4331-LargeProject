@@ -1038,7 +1038,7 @@ export function Dashboard() {
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button className="button" onClick={() => setShowArchived(true)}>Restore</button>
-            <button className="button" onClick={handleLogout}>Logout</button>
+            <button className="button button-primary" onClick={handleLogout}>Logout</button>
           </div>
         </nav>
 
