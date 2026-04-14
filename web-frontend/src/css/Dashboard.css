@@ -212,6 +212,8 @@ html, body {
 .house-card {
   background-color: rgb(241, 255, 166);
   border-color: #1e3a8a;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Badge card */
@@ -225,7 +227,9 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.375rem;
+  flex: 1;
 }
 
 .balloon-cluster {
@@ -1014,27 +1018,34 @@ html, body {
 /* ── Event list ── */
 .event-list {
   padding: 0.5rem 0;
-  border-top: 1px solid #f3f4f6;
-  margin-top: 0.5rem;
 }
 
 .event-item {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 0.6rem 1.25rem;
+  padding: 0.5rem 0.75rem;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: all 0.15s ease;
+  background: rgb(241, 255, 166);
+  border-bottom: 1px solid #1e3a8a;
+}
+
+.event-item:first-child {
+  border-top: 1px solid #1e3a8a;
 }
 
 .event-item:hover {
-  background: #ffc107;
+  background: rgb(241, 255, 166);
+  padding-left: 1rem;
+  border-left: 3px solid #1e3a8a;
 }
 
 .event-icon {
   font-size: 1.1rem;
   flex-shrink: 0;
   margin-top: 2px;
+  color: #1e3a8a;
 }
 
 .event-info {
@@ -1048,18 +1059,18 @@ html, body {
 .event-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #111;
+  color: #1e3a8a;
   line-height: 1.4;
 }
 
 .event-time {
   font-size: 0.7rem;
-  color: #6b7280;
+  color: #1e3a8a;
 }
 
 .event-location {
   font-size: 0.7rem;
-  color: #9ca3af;
+  color: #1e3a8a;
 }
 
 .event-attendees {
