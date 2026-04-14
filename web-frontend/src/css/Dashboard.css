@@ -550,14 +550,14 @@ html, body {
 
 /* ── Task list ── */
 .task-list {
-  padding: 0.75rem 0;
+  padding: 0.5rem 0;
 }
 
 .task-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 1rem 1.5rem;
+  gap: 10px;
+  padding: 0.625rem 1rem;
   cursor: pointer;
   transition: all 0.15s ease;
   background: #ffffff;
@@ -570,30 +570,30 @@ html, body {
 
 .task-item:hover {
   background: #ffc107;
-  padding-left: 1.75rem;
+  padding-left: 1.25rem;
 }
 
 .task-checkbox {
-  margin-top: 3px;
+  margin-top: 2px;
   cursor: pointer;
   accent-color: #1e3a8a;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
 .task-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
   flex: 1;
 }
 
 .task-title {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: #1a202c;
-  line-height: 1.5;
+  line-height: 1.4;
   font-weight: 500;
 }
 
@@ -609,7 +609,7 @@ html, body {
 }
 
 .task-due {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #4a5568;
   font-weight: 500;
 }
@@ -630,14 +630,14 @@ html, body {
 
 .modal-box {
   background: #ffffff;
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 12px;
+  padding: 1.25rem;
   width: 90%;
-  max-width: 420px;
+  max-width: 400px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
   border: 2px solid #718096;
   box-sizing: border-box;
   max-height: 90vh;
@@ -646,23 +646,23 @@ html, body {
 
 @media (min-width: 768px) {
   .modal-box {
-    padding: 2rem;
+    padding: 1.5rem;
   }
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #1a202c;
 }
 
 .modal-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 0.875rem;
   border: 2px solid #718096;
-  border-radius: 10px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
   color: #1a202c;
   background: #ffffff;
   outline: none;
@@ -678,23 +678,23 @@ html, body {
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-top: 0.5rem;
 }
 
 /* ── Toast ── */
 .toast {
   position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
+  bottom: 1rem;
+  right: 1rem;
   background: #1e3a8a;
   color: white;
-  padding: 0.75rem 1.25rem;
+  padding: 0.625rem 1rem;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   z-index: 200;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
   animation: slideInToast 0.3s ease;
 }
 
