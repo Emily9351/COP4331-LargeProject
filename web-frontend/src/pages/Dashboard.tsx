@@ -1018,7 +1018,12 @@ export function Dashboard() {
   const completedTasksCount = allVisibleTasks.filter((t) => t.status === "done").length;
 
   const handleLogout = () => {
-    localStorage.clear();
+    // Only clear auth-related data, preserve weekly progress
+    localStorage.removeItem("userId");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
     window.location.href = "/";
   };
 
