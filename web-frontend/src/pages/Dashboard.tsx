@@ -122,12 +122,17 @@ function GroupCard({
   group,
   allStudents,
   onAddMember,
+  onToggleTask,
+  onAddTask,
 }: {
   group: StudentGroup;
   allStudents: { _id: string; name: string; email: string }[];
   onAddMember: (groupId: string, userId: string) => void;
+  onToggleTask: (groupId: string, taskId: string) => void;
+  onAddTask: (groupId: string, title: string) => void;
 }) {
   const isProfessorCreated = group.createdBy?.role === "professor";
+  const [newTaskTitle, setNewTaskTitle] = useState("");
 
   return (
     <div className="content-card">
@@ -140,8 +145,42 @@ function GroupCard({
           </span>
         </div>
       </div>
+
+      <div className="group-section">
+        <h4 style={{ margin: '15px 0 10px' }}>Group Tasks</h4>
+        <div className="task-list">
+          {(!group.tasks || group.tasks.length === 0) && <p className="empty-msg">No tasks for this group.</p>}
+          {group.tasks?.map((task) => (
+            <TaskItem key={task._id} task={task} onToggle={() => onToggleTask(group._id, task._id)} />
+          ))}
+        </div>
+
+        {(group.allowStudentTasks || !isProfessorCreated) && (
+          <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+            <input 
+              className="modal-input" 
+              style={{ marginBottom: 0 }}
+              placeholder="Add group task..." 
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  onAddTask(group._id, newTaskTitle);
+                  setNewTaskTitle("");
+                }
+              }}
+            />
+            <button className="button button-primary" onClick={() => {
+              onAddTask(group._id, newTaskTitle);
+              setNewTaskTitle("");
+            }}>+</button>
+          </div>
+        )}
+      </div>
+
+      <h4 style={{ margin: '15px 0 10px' }}>Members</h4>
       {!isProfessorCreated && (
-        <div className="group-members-actions" style={{ marginTop: '15px' }}>
+        <div className="group-members-actions" style={{ marginTop: '10px' }}>
           <select 
             className="modal-input"
             style={{ width: '100%', marginBottom: '10px' }}
@@ -374,7 +413,14 @@ export function Dashboard() {
         );
 
         setClasses(classesWithTasks);
-        setGroups(groupData);
+
+        const groupsWithTasks = await Promise.all(
+          groupData.map(async (group: StudentGroup) => {
+            const taskRes = await fetch(`/api/tasks?userId=${userId}&studyGroupId=${group._id}`);
+            return { ...group, tasks: await taskRes.json() };
+          })
+        );
+        setGroups(groupsWithTasks);
         setAllStudents(studentsData);
         
         // Filter out classes the student is already in
@@ -523,6 +569,49 @@ export function Dashboard() {
 
     // Sync to backend
     await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
+  };
+
+  const toggleGroupTask = async (groupId: string, taskId: string) => {
+    // Optimistic UI update
+    setGroups((prev) =>
+      prev.map((group) => {
+        if (group._id !== groupId) return group;
+        return {
+          ...group,
+          tasks: group.tasks?.map((task) => {
+            if (task._id !== taskId) return task;
+            if (task.status !== "done") incrementBalloons(weeklyCount, earnedBadges, weekStartDate);
+            return {
+              ...task,
+              status: task.status === "done" ? "todo" : "done",
+            } as Task;
+          }),
+        };
+      })
+    );
+
+    // Sync to backend
+    await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
+  };
+
+  const handleAddGroupTask = async (groupId: string, title: string) => {
+    if (!title) return;
+    const userId = localStorage.getItem("userId");
+
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        studyGroupId: groupId,
+        userId, 
+      }),
+    });
+
+    if (res.ok) {
+      showToast("Group task created!");
+      window.location.reload();
+    }
   };
 
   const handleAddTask = async (title: string, dueDate: string) => {
@@ -709,6 +798,8 @@ export function Dashboard() {
                     group={group}
                     allStudents={allStudents}
                     onAddMember={handleAddMemberToGroup}
+                    onToggleTask={toggleGroupTask}
+                    onAddTask={handleAddGroupTask}
                   />
                 ))}
               </div>
@@ -732,68 +823,15 @@ export function Dashboard() {
             )}
           </div>
 
-        </div>{/* end dashboard-content */}
-      </div>{/* end overlay */}
+        </div>
+      </div>
 
-      {/* Add Task Modal */}
       <AddTaskModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onAdd={handleAddTask}
       />
 
-      {/* Toast */}
-      {toast && <div className="toast">{toast}</div>}
-
-      <CreateGroupModal
-        open={showCreateGroup}
-        onClose={() => setShowCreateGroup(false)}
-        onAdd={handleCreateGroup}
-        classes={classes}
-      />
-    </div>
-  );
-}     classes={classes}
-      />
-    </div>
-  );
-}
-
-      <CreateGroupModal
-        open={showCreateGroup}
-        onClose={() => setShowCreateGroup(false)}
-        onAdd={handleCreateGroup}
-        classes={classes}
-      />
-    </div>
-  );
-}g">No new classes available to join.</p>}
-                {availableClasses.map((cls) => (
-                  <div key={cls._id} className="content-card">
-                     <div className="content-card-header">
-                        <div>
-                           <h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3>
-                           <p className="content-card-meta">{cls.semester}</p>
-                        </div>
-                        <button className="button button-primary" onClick={() => handleJoinClass(cls._id)}>Join</button>
-                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-        </div>{/* end dashboard-content */}
-      </div>{/* end overlay */}
-
-      {/* Add Task Modal */}
-      <AddTaskModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onAdd={handleAddTask}
-      />
-
-      {/* Toast */}
       {toast && <div className="toast">{toast}</div>}
 
       <CreateGroupModal
