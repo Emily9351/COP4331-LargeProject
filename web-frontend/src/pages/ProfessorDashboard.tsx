@@ -34,7 +34,7 @@ export function ProfessorDashboard() {
     const [classes, setClasses] = useState<Class[]>([]);
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
     const [groups, setGroups] = useState<Group[]>([]);
-    const [students, setStudents] = useState<User[]>([]);
+    const [_students, setStudents] = useState<User[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
 
     const [newCourseCode, setNewCourseCode] = useState("");
