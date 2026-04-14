@@ -119,17 +119,7 @@ class _DashboardPageState extends State<DashboardPage> {
       final classRes = await http.get(Uri.parse('$_baseUrl/api/classes?userId=$userId'));
       final classData = jsonDecode(classRes.body) as List;
 
-      // 2. Filter to this student's enrolled classes
-      final userRes  = await http.get(Uri.parse('$_baseUrl/api/users/$userId'), headers: headers);
-      final userData = jsonDecode(userRes.body);
-      final enrolledIds = List<String>.from(
-        (userData['enrolledClasses'] ?? []).map((c) => c is Map ? c['_id'] : c),
-      );
-
-      final myClasses = classData
-          .where((c) => enrolledIds.contains(c['_id']))
-          .map((c) => ClassModel.fromJson(c))
-          .toList();
+    
       final myClasses = classData.map((c) => ClassModel.fromJson(c)).toList();
 
       // 2. Fetch tasks for each class
