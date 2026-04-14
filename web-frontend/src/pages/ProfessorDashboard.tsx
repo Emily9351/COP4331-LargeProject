@@ -214,6 +214,7 @@ export function ProfessorDashboard() {
                 title: taskTitle,
                 dueDate: taskDueDate || null,
                 classId: selectedClass._id,
+                userId: userId, // Include professor's userId
             }),
         });
 
@@ -237,6 +238,7 @@ export function ProfessorDashboard() {
                 title,
                 dueDate: dueDate || null,
                 studyGroupId: groupId,
+                userId: userId, // Include professor's userId
             }),
         });
 
