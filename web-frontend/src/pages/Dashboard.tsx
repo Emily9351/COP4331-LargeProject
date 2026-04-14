@@ -781,11 +781,12 @@ export function Dashboard() {
         description,
         classId,
         createdBy: userId,
+        memberIds: [userId], // Auto-add creator as member
       }),
     });
 
     if (res.ok) {
-      showToast("Group created! Now add some members.");
+      showToast("Group created! You've been added as a member.");
       fetchAll(); // Dynamic update
     } else {
       showToast("Failed to create group");
