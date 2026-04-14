@@ -114,8 +114,12 @@ function ClassCard({
 
 function GroupCard({
   group,
+  allStudents,
+  onAddMember,
 }: {
   group: StudentGroup;
+  allStudents: { _id: string; name: string; email: string }[];
+  onAddMember: (groupId: string, userId: string) => void;
 }) {
   return (
     <div className="content-card">
@@ -126,6 +130,23 @@ function GroupCard({
             {group.memberIds.length} members · {group.description}
           </span>
         </div>
+      </div>
+      <div className="group-members-actions" style={{ marginTop: '15px' }}>
+        <select 
+          className="modal-input"
+          style={{ width: '100%', marginBottom: '10px' }}
+          onChange={(e) => {
+            if (e.target.value) {
+              onAddMember(group._id, e.target.value);
+              e.target.value = "";
+            }
+          }}
+        >
+          <option value="">Add member by name...</option>
+          {allStudents.filter(s => !group.memberIds.includes(s._id)).map(s => (
+            <option key={s._id} value={s._id}>{s.name} ({s.email})</option>
+          ))}
+        </select>
       </div>
     </div>
   );
@@ -146,7 +167,6 @@ function AddTaskModal({
   if (!open) return null;
 
   const handleSubmit = () => {
-    if (!title.trim()) return;
     if (!title.trim()) return;
     onAdd(title.trim(), dueDate);
     setTitle("");
@@ -232,6 +252,68 @@ function BadgeSash({
   );
 }
 
+function CreateGroupModal({
+  open,
+  onClose,
+  onAdd,
+  classes,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (name: string, description: string, classId: string) => void;
+  classes: Class[];
+}) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [classId, setClassId] = useState("");
+
+  if (!open) return null;
+
+  const handleSubmit = () => {
+    if (!name.trim() || !classId) return;
+    onAdd(name.trim(), description.trim(), classId);
+    setName("");
+    setDescription("");
+    setClassId("");
+    onClose();
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <h3 className="modal-title">Create Study Group</h3>
+        <input
+          className="modal-input"
+          placeholder="Group name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <textarea
+          className="modal-input"
+          placeholder="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          style={{ minHeight: '80px', padding: '10px' }}
+        />
+        <select 
+          className="modal-input"
+          value={classId}
+          onChange={(e) => setClassId(e.target.value)}
+        >
+          <option value="">Select a class...</option>
+          {classes.map(c => (
+            <option key={c._id} value={c._id}>{c.courseCode} - {c.title}</option>
+          ))}
+        </select>
+        <div className="modal-actions">
+          <button className="button" onClick={onClose}>Cancel</button>
+          <button className="button button-primary" onClick={handleSubmit}>Create</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Main Dashboard ---
 export function Dashboard() {
   // const navigate = useNavigate();
@@ -245,6 +327,7 @@ export function Dashboard() {
   const [weekStartDate, setWeekStartDate] = useState("");
   const [earnedBadges, setEarnedBadges] = useState<BadgeType[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [modalTarget, setModalTarget] = useState<{ type: "class" | "group"; id: string } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -312,6 +395,50 @@ export function Dashboard() {
       window.location.reload(); // Simple way to refresh data
     } else {
       showToast("Failed to enroll");
+    }
+  };
+
+  const handleCreateGroup = async (name: string, description: string, classId: string) => {
+    const userId = localStorage.getItem("userId");
+    const res = await fetch("/api/groups", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        description,
+        classId,
+        createdBy: userId,
+      }),
+    });
+
+    if (res.ok) {
+      const newGroup = await res.json();
+      setGroups(prev => [...prev, newGroup]);
+      showToast("Group created! Now add some members.");
+    } else {
+      showToast("Failed to create group");
+    }
+  };
+
+  const handleAddMemberToGroup = async (groupId: string, userId: string) => {
+    const res = await fetch(`/api/groups/${groupId}/members`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (res.ok) {
+      showToast("Member added to group!");
+      // Update local state
+      setGroups(prev => prev.map(g => {
+        if (g._id === groupId) {
+          return { ...g, memberIds: [...g.memberIds, userId] };
+        }
+        return g;
+      }));
+    } else {
+      const data = await res.json();
+      showToast(data.message || "Failed to add member");
     }
   };
 
@@ -560,15 +687,16 @@ export function Dashboard() {
             {activeTab === "groups" && (
               <div className="tab-content-grid">
                 <div className="content-card create-group-card">
-                   <h3>Start a Study Group</h3>
-                   <p>Collaborate with your peers on tasks and projects.</p>
-                   <button className="button button-primary" onClick={() => setShowCreateGroup(true)}>Create Group</button>
+                    <h3>Start a Study Group</h3>
+                    <p>Collaborate with your peers on tasks and projects.</p>
+                    <button className="button button-primary" onClick={() => setShowCreateGroup(true)}>Create Group</button>
                 </div>
                 {groups.map((group) => (
                   <GroupCard
                     key={group._id}
                     group={group}
                     allStudents={allStudents}
+                    onAddMember={handleAddMemberToGroup}
                   />
                 ))}
               </div>
@@ -604,6 +732,13 @@ export function Dashboard() {
 
       {/* Toast */}
       {toast && <div className="toast">{toast}</div>}
+
+      <CreateGroupModal
+        open={showCreateGroup}
+        onClose={() => setShowCreateGroup(false)}
+        onAdd={handleCreateGroup}
+        classes={classes}
+      />
     </div>
   );
 }
