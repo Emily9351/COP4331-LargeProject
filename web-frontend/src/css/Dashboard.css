@@ -120,24 +120,22 @@ html, body {
 }
 
 .card {
-  border-radius: 0.5rem;
-  border: 2px solid;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  padding: 1.25rem 1.5rem 1.5rem;
-  overflow: hidden;
-  background: #f1ffa6
+    background: #111827;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 6px 25px #00000040;
 }
 
 .card h2 {
   margin: 0 0 0.25rem;
   font-size: 1.2rem;
-  color: #111;
+  color: #f1ffa6; /* Light yellow-green for visibility on dark background */
   text-align: center;
 }
 
 .card .subtitle {
   font-size: 0.875rem;
-  color: #374151;
+  color: #e2e8f0; /* Light slate for visibility */
   text-align: center;
   margin-bottom: 1rem;
 }
