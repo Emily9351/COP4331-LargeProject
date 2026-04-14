@@ -37,7 +37,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 1rem;
   background-color: #ffffff;
   border-bottom: 2px solid #718096;
   flex-shrink: 0;
@@ -51,33 +51,33 @@ html, body {
 
 @media (max-width: 768px) {
   .dashboard-navbar {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
   }
 }
 
 .dashboard-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .dashboard-brand .logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #1e3a8a, #1e40af);
   box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
 }
 
 .dashboard-brand .name {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   margin: 0;
   color: #1a202c;
 }
 
 .dashboard-brand .subtitle {
-  font-size: 13px;
+  font-size: 11px;
   color: #2d3748;
   margin: 0;
   font-weight: 500;
@@ -88,10 +88,10 @@ html, body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -99,13 +99,15 @@ html, body {
 
 @media (min-width: 768px) {
   .dashboard-content {
-    padding: 2rem 2rem 3rem;
+    padding: 1.25rem;
+    gap: 1.25rem;
   }
 }
 
 @media (min-width: 1200px) {
   .dashboard-content {
-    padding: 2rem 3rem 3rem;
+    padding: 1.5rem 2rem;
+    gap: 1.5rem;
   }
 }
 
@@ -113,15 +115,15 @@ html, body {
 .button {
   background-color: white;
   border: 2px solid #718096;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #1a202c;
-  padding: 8px 20px;
+  padding: 4px 12px;
   text-align: center;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -137,14 +139,14 @@ html, body {
   background-color: #1e3a8a;
   border-color: #1e3a8a;
   color: white;
-  box-shadow: 0 2px 8px rgba(30, 58, 138, 0.25);
+  box-shadow: 0 2px 6px rgba(30, 58, 138, 0.25);
 }
 
 .button-primary:hover {
   background-color: #1e40af;
   border-color: #1e40af;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(30, 58, 138, 0.35);
 }
 
 /* ── Top cards grid ── */
