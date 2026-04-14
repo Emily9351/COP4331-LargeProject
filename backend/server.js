@@ -136,6 +136,25 @@ app.post("/api/login", async (req, res) => {
 /// User API
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//get all users (searchable)
+app.get("/api/users", async (req, res) => {
+  try {
+    const { role, name, email } = req.query;
+    const filter = {};
+    if (role) filter.role = role;
+    if (name) filter.name = { $regex: name, $options: "i" };
+    if (email) filter.email = { $regex: email, $options: "i" };
+
+    const users = await User.find(filter)
+      .select("-passwordHash")
+      .limit(20);
+
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 //get user
 app.get("/api/users/:id", async (req, res) => {
   try {
@@ -230,7 +249,12 @@ app.post("/api/classes", async (req, res) => {
 //get all classes
 app.get("/api/classes", async (req, res) => {
   try {
-    const classes = await Class.find()
+    const { userId, professorId } = req.query;
+    const filter = {};
+    if (userId) filter.studentIds = userId;
+    if (professorId) filter.professorId = professorId;
+
+    const classes = await Class.find(filter)
       .populate("professorId", "name email");
  
     res.json(classes);
@@ -397,7 +421,11 @@ app.post("/api/groups", async (req, res) => {
 // Get all groups
 app.get("/api/groups", async (req, res) => {
   try {
-    const groups = await StudyGroup.find()
+    const { userId } = req.query;
+    const filter = {};
+    if (userId) filter.memberIds = userId;
+
+    const groups = await StudyGroup.find(filter)
       .populate("memberIds", "name email")
       .populate("classId", "courseCode title");
  
@@ -518,7 +546,7 @@ app.get("/api/classes/:id/groups", async (req, res) => {
       return res.status(404).json({ message: "Class not found" });
  
     const groups = await StudyGroup.find({ classId: req.params.id })
-      .populate("members", "name email");
+      .populate("memberIds", "name email");
  
     res.json(groups);
   } catch (error) {
@@ -533,18 +561,20 @@ app.get("/api/classes/:id/groups", async (req, res) => {
 // Create a task
 app.post("/api/tasks", async (req, res) => {
   try {
-    const { title, type, dueDate, classId,  assignedTo, linkedEventId, priority, notes, tags } = req.body;
+    const { title, type, dueDate, classId,  assignedTo, userId, linkedEventId, priority, notes, tags } = req.body;
  
     if (!title)
       return res.status(400).json({ message: "Task title is required" });
-    if (!assignedTo)
+    
+    const finalAssignedTo = assignedTo || userId;
+    if (!finalAssignedTo)
       return res.status(400).json({ message: "Assigned user is required" });
 
 
     const task = new Task({
       title,
       type: type || "assignment",
-      assignedTo,
+      assignedTo: finalAssignedTo,
       dueDate: dueDate || null,
       linkedEventId: linkedEventId || null,
       classId: classId || null,
@@ -564,12 +594,13 @@ app.post("/api/tasks", async (req, res) => {
 // Get all tasks
 app.get("/api/tasks", async (req, res) => {
   try {
-    const { classId, status } = req.query;
+    const { classId, status, userId, assignedTo } = req.query;
  
     const filter = {};
  
     if (classId) filter.classId = classId;
     if (status) filter.status = status;
+    if (assignedTo || userId) filter.assignedTo = assignedTo || userId;
    
  
     const tasks = await Task.find(filter)
@@ -613,6 +644,21 @@ app.put("/api/tasks/:id", async (req, res) => {
     if (!task)
       return res.status(404).json({ message: "Task not found" });
  
+    res.json(task);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Toggle task status
+app.patch("/api/tasks/:id/toggle", async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    task.status = task.status === "done" ? "todo" : "done";
+    await task.save();
+
     res.json(task);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
