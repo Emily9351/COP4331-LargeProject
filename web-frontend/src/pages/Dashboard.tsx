@@ -665,14 +665,6 @@ function ArchivedTasksModal({
 }
 
 // --- Main Dashboard ---
-function getStoredUserId(): string | null {
-  try {
-    return localStorage.getItem("userId") || sessionStorage.getItem("userId");
-  } catch {
-    return sessionStorage.getItem("userId");
-  }
-}
-
 export function Dashboard() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [groups, setGroups] = useState<StudentGroup[]>([]);
@@ -689,13 +681,10 @@ export function Dashboard() {
   const [modalTarget, setModalTarget] = useState<{ type: "class" | "group"; id: string } | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [userId] = useState<string | null>(() => getStoredUserId());
 
   const fetchAll = async () => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
 
     try {
       const [classRes, groupRes, studentsRes, allClassRes] = await Promise.all([
@@ -767,6 +756,7 @@ export function Dashboard() {
   }, []);
 
   const handleJoinClass = async (classId: string) => {
+    const userId = localStorage.getItem("userId");
     const res = await fetch(`/api/classes/${classId}/enroll`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -782,6 +772,7 @@ export function Dashboard() {
   };
 
   const handleCreateGroup = async (name: string, description: string, classId: string) => {
+    const userId = localStorage.getItem("userId");
     const res = await fetch("/api/groups", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -856,7 +847,6 @@ export function Dashboard() {
       })
     );
     await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
-    fetchAll();
   };
 
   const toggleGroupTask = async (groupId: string, taskId: string) => {
@@ -877,7 +867,6 @@ export function Dashboard() {
       })
     );
     await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
-    fetchAll();
   };
 
   const handleToggleHideTask = async (taskId: string) => {
@@ -897,6 +886,8 @@ export function Dashboard() {
 
   const handleAddGroupTask = async (groupId: string, title: string) => {
     if (!title) return;
+    const userId = localStorage.getItem("userId");
+
     const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -915,6 +906,8 @@ export function Dashboard() {
 
   const handleAddTask = async (title: string, dueDate: string) => {
     if (!modalTarget) return;
+    const userId = localStorage.getItem("userId");
+
     const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -933,6 +926,7 @@ export function Dashboard() {
   };
 
   const handleRSVP = async (eventId: string, status: "accepted" | "declined") => {
+    const userId = localStorage.getItem("userId");
     if (!userId) return;
 
     if (status === "accepted") {
@@ -961,6 +955,8 @@ export function Dashboard() {
 
   const handleCreateEvent = async (data: Partial<Event>) => {
     if (!modalTarget) return;
+    const userId = localStorage.getItem("userId");
+
     const res = await fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1023,19 +1019,16 @@ export function Dashboard() {
 
   const handleLogout = () => {
     // Only clear auth-related data, preserve weekly progress
-    ["userId", "token", "userRole", "userName", "userEmail"].forEach(key => {
-      try { localStorage.removeItem(key); } catch {}
-      try { sessionStorage.removeItem(key); } catch {}
-    });
+    localStorage.removeItem("userId");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
     window.location.href = "/";
   };
 
   if (loading) {
     return <div className="dashboard-page"><div className="overlay"><p>Loading...</p></div></div>;
-  }
-
-  if (!userId) {
-    return <div className="dashboard-page"><div className="overlay"><p>Session expired. Please <a href="/">log in again</a>.</p></div></div>;
   }
 
   return (
