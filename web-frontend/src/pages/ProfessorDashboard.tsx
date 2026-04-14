@@ -20,6 +20,7 @@ interface Group {
     _id: string;
     name: string;
     memberIds: User[];
+    allowStudentTasks?: boolean;
 }
 
 interface Class {
@@ -40,18 +41,20 @@ export function ProfessorDashboard() {
     const [newCourseCode, setNewCourseCode] = useState("");
     const [newTitle, setNewTitle] = useState("");
     const [newGroupName, setNewGroupName] = useState("");
+    const [allowStudentTasks, setAllowStudentTasks] = useState(true);
     const [selectedStudentId, setSelectedStudentId] = useState("");
 
     const [taskTitle, setTaskTitle] = useState("");
+    const [groupTaskTitles, setGroupTaskTitles] = useState<{ [groupId: string]: string }>({});
 
     const [deleteModal, setDeleteModal] = useState<{ open: boolean; classId: string | null }>({
         open: false, classId: null
     });
 
-    // Get these from localStorage — make sure login stores them!
+    // Get these from localStorage
     const userId = localStorage.getItem("userId");
 
-    /* ===== FETCH ALL CLASSES (using professorId filter) ===== */
+    /* ===== FETCH ALL CLASSES ===== */
     const fetchClasses = async () => {
         const res = await fetch(`/api/classes?professorId=${userId}`);
         const data = await res.json();
@@ -62,7 +65,7 @@ export function ProfessorDashboard() {
         }
     };
 
-    /* ===== FETCH ALL STUDENTS (using new /api/users endpoint) ===== */
+    /* ===== FETCH ALL STUDENTS ===== */
     const fetchStudents = async () => {
         const res = await fetch("/api/users?role=student");
         const data = await res.json();
@@ -74,9 +77,11 @@ export function ProfessorDashboard() {
     };
 
     useEffect(() => {
-        fetchClasses();
-        fetchStudents();
-    }, []);
+        if (userId) {
+            fetchClasses();
+            fetchStudents();
+        }
+    }, [userId]);
 
     /* ===== FETCH TASKS ===== */
     const fetchTasks = async (classId: string) => {
@@ -103,7 +108,7 @@ export function ProfessorDashboard() {
     const createClass = async () => {
         if (!newCourseCode || !newTitle) return toast.error("Course code and title required");
 
-        const res = await fetch("/api/classes", {   // ✅ was /api/classes/create
+        const res = await fetch("/api/classes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ courseCode: newCourseCode, title: newTitle, professorId: userId }),
@@ -131,7 +136,7 @@ export function ProfessorDashboard() {
     const createGroup = async () => {
         if (!selectedClass || !newGroupName) return;
 
-        await fetch("/api/groups", {   // ✅ was /api/groups/create
+        await fetch("/api/groups", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
@@ -157,10 +162,10 @@ export function ProfessorDashboard() {
     const addStudent = async () => {
         if (!selectedClass || !selectedStudentId) return;
 
-        const res = await fetch(`/api/classes/${selectedClass._id}/enroll`, {   // ✅ was /api/classes/join
+        const res = await fetch(`/api/classes/${selectedClass._id}/enroll`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: selectedStudentId }),   // ✅ sends userId not username
+            body: JSON.stringify({ userId: selectedStudentId }),
         });
 
         if (res.ok) {
@@ -175,7 +180,7 @@ export function ProfessorDashboard() {
 
     /* ===== REMOVE STUDENT ===== */
     const removeStudent = async (studentId: string) => {
-        await fetch(`/api/classes/${selectedClass!._id}/enroll/${studentId}`, {   // ✅ was /remove-student/
+        await fetch(`/api/classes/${selectedClass!._id}/enroll/${studentId}`, {
             method: "DELETE",
         });
         handleSelectClass(selectedClass!);
@@ -185,7 +190,7 @@ export function ProfessorDashboard() {
     const addToGroup = async (groupId: string, memberId: string) => {
         if (!memberId) return;
 
-        await fetch(`/api/groups/${groupId}/members`, {   // ✅ was /api/groups/:id/add
+        await fetch(`/api/groups/${groupId}/members`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: memberId }),
@@ -214,6 +219,25 @@ export function ProfessorDashboard() {
         }
     };
 
+    const createGroupTask = async (groupId: string) => {
+        const title = groupTaskTitles[groupId];
+        if (!title) return;
+
+        const res = await fetch("/api/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title,
+                studyGroupId: groupId,
+            }),
+        });
+
+        if (res.ok) {
+            toast.success("Task created for all group members");
+            setGroupTaskTitles(prev => ({ ...prev, [groupId]: "" }));
+        }
+    };
+
     /* ===== DELETE TASK ===== */
     const deleteTask = async (taskId: string) => {
         await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
@@ -225,7 +249,6 @@ export function ProfessorDashboard() {
         window.location.href = "/";
     };
 
-    /* ===== UI ===== */
     return (
         <div className="dashboard-page">
             <div className="overlay">
@@ -344,6 +367,15 @@ export function ProfessorDashboard() {
                             <div className="content-card">
                                 <h4>Create Group</h4>
                                 <input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} placeholder="Group name" />
+                                <div style={{ margin: '10px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        id="allowTasks" 
+                                        checked={allowStudentTasks} 
+                                        onChange={(e) => setAllowStudentTasks(e.target.checked)} 
+                                    />
+                                    <label htmlFor="allowTasks" style={{ fontSize: '0.9rem', color: 'white' }}>Allow students to add tasks</label>
+                                </div>
                                 <button className="button button-primary" onClick={createGroup}>
                                     <Plus size={16} /> Create Group
                                 </button>
@@ -359,16 +391,16 @@ export function ProfessorDashboard() {
                                     </div>
                                     <div style={{ marginBottom: '10px' }}>
                                         <span className="content-card-meta">
-                                            {(g as any).allowStudentTasks ? "✅ Students can add tasks" : "🔒 Professor-only tasks"}
+                                            {g.allowStudentTasks ? "✅ Students can add tasks" : "🔒 Professor-only tasks"}
                                         </span>
                                     </div>
                                     
-                                    <h5>Members</h5>
+                                    <h5 style={{ color: 'white', marginBottom: '5px' }}>Members</h5>
                                     {(g.memberIds || []).map((m) => (
                                         <div key={m._id} className="task-item">{m.name}</div>
                                     ))}
                                     
-                                    <h5 style={{ marginTop: '15px' }}>Group Tasks</h5>
+                                    <h5 style={{ marginTop: '15px', color: 'white', marginBottom: '5px' }}>Group Tasks</h5>
                                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                                         <input 
                                             placeholder="Group task title" 
