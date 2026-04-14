@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
-// import { BookOpen, Users, LogOut, Clock, Award } from "lucide-react";
+import { Trash2, RotateCcw } from "lucide-react";
 import "../css/Dashboard.css";
 
 // --- Types ---
@@ -93,13 +93,18 @@ function TaskItem({
       {(isDone || task.isHidden) && (
         <button 
           className="button" 
-          style={{ padding: '2px 8px', fontSize: '0.7rem', marginLeft: 'auto' }}
+          style={{ padding: '2px 8px', fontSize: '0.7rem', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}
           onClick={(e) => {
             e.stopPropagation();
             onToggleHide();
           }}
+          title={task.isHidden ? "Restore task" : "Delete task (Hide)"}
         >
-          {task.isHidden ? "Restore" : "Hide"}
+          {task.isHidden ? (
+            <><RotateCcw size={12} /> Restore</>
+          ) : (
+            <><Trash2 size={12} /> Delete</>
+          )}
         </button>
       )}
     </div>
