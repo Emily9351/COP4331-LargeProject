@@ -815,3 +815,60 @@ html, body {
   margin: 0 1rem 1rem;
   width: calc(100% - 2rem);
 }
+
+/* ── Event list ── */
+.event-list {
+  padding: 0.5rem 0;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 0.5rem;
+}
+
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0.6rem 1.25rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.event-item:hover {
+  background: #f9fafb;
+}
+
+.event-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.event-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.event-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111;
+  line-height: 1.4;
+}
+
+.event-time {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.event-location {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.event-attendees {
+  font-size: 0.7rem;
+  color: #2563eb;
+  font-weight: 500;
+}

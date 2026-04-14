@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
-import { Trash2, RotateCcw } from "lucide-react";
+import { Trash2, RotateCcw, Calendar, MapPin, Users, Clock, Plus } from "lucide-react";
 import "../css/Dashboard.css";
 
 // --- Types ---
@@ -16,12 +16,35 @@ interface Task {
   isHidden: boolean;
 }
 
+interface RSVP {
+  _id: string;
+  userId: string;
+  eventId: string;
+  status: "accepted" | "declined" | "tentative";
+}
+
+interface Event {
+  _id: string;
+  title: string;
+  description: string;
+  type: "study_session" | "lecture" | "office_hours" | "exam_review" | "social" | "other";
+  createdBy: { _id: string; name: string };
+  classId?: string;
+  studyGroupId?: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  meetingLink?: string;
+  rsvps?: RSVP[];
+}
+
 interface Class {
   _id: string;
   title: string;
   courseCode: string;
   semester?: string;
   tasks: Task[];
+  events: Event[];
 }
 
 interface StudentGroup {
@@ -32,6 +55,7 @@ interface StudentGroup {
   classId: string;
   allowStudentTasks?: boolean;
   tasks?: Task[];
+  events: Event[];
   createdBy?: {
     _id: string;
     role: string;
@@ -111,16 +135,74 @@ function TaskItem({
   );
 }
 
+function EventItem({
+  event,
+  onRSVP,
+}: {
+  event: Event;
+  onRSVP: (eventId: string, status: "accepted" | "declined") => void;
+}) {
+  const userId = localStorage.getItem("userId");
+  const userRsvp = event.rsvps?.find(r => r.userId === userId);
+  const isAccepted = userRsvp?.status === "accepted";
+
+  const eventIcons: Record<string, string> = {
+    study_session: "📖",
+    lecture: "👨‍🏫",
+    office_hours: "🏠",
+    exam_review: "📝",
+    social: "🎉",
+    other: "✨",
+  };
+
+  return (
+    <div className="event-item">
+      <div className="event-icon">{eventIcons[event.type] || "✨"}</div>
+      <div className="event-info">
+        <span className="event-title">{event.title}</span>
+        <div className="event-time" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Clock size={12} />
+          {new Date(event.startTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+        </div>
+        {event.location && (
+          <div className="event-location" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <MapPin size={12} />
+            {event.location}
+          </div>
+        )}
+        <div className="event-attendees" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Users size={12} />
+          {event.rsvps?.filter(r => r.status === "accepted").length || 0} attending
+        </div>
+      </div>
+      <button 
+        className={`button ${isAccepted ? "button-primary" : ""}`}
+        style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRSVP(event._id, isAccepted ? "declined" : "accepted");
+        }}
+      >
+        {isAccepted ? "Attending" : "Join"}
+      </button>
+    </div>
+  );
+}
+
 function ClassCard({
   cls,
   onToggleTask,
   onAddTask,
   onToggleHide,
+  onAddEvent,
+  onRSVP,
 }: {
   cls: Class;
   onToggleTask: (taskId: string) => void;
   onAddTask: () => void;
   onToggleHide: (taskId: string) => void;
+  onAddEvent: () => void;
+  onRSVP: (eventId: string, status: "accepted" | "declined") => void;
 }) {
   const visibleTasks = cls.tasks.filter(t => !t.isHidden);
   const completed = visibleTasks.filter((t) => t.status === "done").length;
@@ -131,7 +213,10 @@ function ClassCard({
           <h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3>
           <span className="content-card-meta">{completed}/{visibleTasks.length} tasks complete</span>
         </div>
-        <button className="add-task-btn" onClick={onAddTask} title="Add task">+</button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="add-task-btn" onClick={onAddEvent} title="Create study event"><Calendar size={14} /></button>
+          <button className="add-task-btn" onClick={onAddTask} title="Add task"><Plus size={14} /></button>
+        </div>
       </div>
       <div className="task-list">
         {visibleTasks.map((task) => (
@@ -143,6 +228,14 @@ function ClassCard({
           />
         ))}
       </div>
+      {cls.events && cls.events.length > 0 && (
+        <div className="event-list">
+          <h4 style={{ margin: '0 1.25rem 0.5rem', fontSize: '0.8rem', color: '#6b7280' }}>Class Events</h4>
+          {cls.events.map(event => (
+            <EventItem key={event._id} event={event} onRSVP={onRSVP} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -154,6 +247,8 @@ function GroupCard({
   onToggleTask,
   onAddTask,
   onToggleHide,
+  onAddEvent,
+  onRSVP,
 }: {
   group: StudentGroup;
   allStudents: { _id: string; name: string; email: string }[];
@@ -161,6 +256,8 @@ function GroupCard({
   onToggleTask: (groupId: string, taskId: string) => void;
   onAddTask: (groupId: string, title: string) => void;
   onToggleHide: (groupId: string, taskId: string) => void;
+  onAddEvent: () => void;
+  onRSVP: (eventId: string, status: "accepted" | "declined") => void;
 }) {
   const isProfessorCreated = group.createdBy?.role === "professor";
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -176,6 +273,7 @@ function GroupCard({
             {isProfessorCreated && <div style={{ color: "#38bdf8", fontSize: "0.8rem", marginTop: "4px" }}>Professor Managed</div>}
           </span>
         </div>
+        <button className="add-task-btn" onClick={onAddEvent} title="Create study event"><Calendar size={14} /></button>
       </div>
 
       <div className="group-section">
@@ -215,6 +313,15 @@ function GroupCard({
         )}
       </div>
 
+      {group.events && group.events.length > 0 && (
+        <div className="event-list">
+          <h4 style={{ margin: '10px 1.25rem 5px', fontSize: '0.8rem', color: '#6b7280' }}>Group Events</h4>
+          {group.events.map(event => (
+            <EventItem key={event._id} event={event} onRSVP={onRSVP} />
+          ))}
+        </div>
+      )}
+
       <h4 style={{ margin: '15px 0 10px' }}>Members</h4>
       {!isProfessorCreated && (
         <div className="group-members-actions" style={{ marginTop: '10px' }}>
@@ -235,6 +342,100 @@ function GroupCard({
           </select>
         </div>
       )}
+    </div>
+  );
+}
+
+function CreateEventModal({
+  open,
+  onClose,
+  onAdd,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (data: Partial<Event>) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [type, setType] = useState<Event["type"]>("study_session");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [location, setLocation] = useState("");
+
+  if (!open) return null;
+
+  const handleSubmit = () => {
+    if (!title.trim() || !startTime || !endTime) return;
+    onAdd({
+      title: title.trim(),
+      description: description.trim(),
+      type,
+      startTime,
+      endTime,
+      location: location.trim(),
+    });
+    setTitle("");
+    setDescription("");
+    setType("study_session");
+    setStartTime("");
+    setEndTime("");
+    setLocation("");
+    onClose();
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <h3 className="modal-title">Create Study Event</h3>
+        <input
+          className="modal-input"
+          placeholder="Event title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <select 
+          className="modal-input"
+          value={type}
+          onChange={(e) => setType(e.target.value as any)}
+        >
+          <option value="study_session">Study Session</option>
+          <option value="lecture">Lecture</option>
+          <option value="office_hours">Office Hours</option>
+          <option value="exam_review">Exam Review</option>
+          <option value="social">Social</option>
+          <option value="other">Other</option>
+        </select>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: '0.7rem', color: '#6b7280' }}>Start Time</label>
+            <input
+              className="modal-input"
+              type="datetime-local"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: '0.7rem', color: '#6b7280' }}>End Time</label>
+            <input
+              className="modal-input"
+              type="datetime-local"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </div>
+        </div>
+        <input
+          className="modal-input"
+          placeholder="Location / Meeting Link"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
+        <div className="modal-actions">
+          <button className="button" onClick={onClose}>Cancel</button>
+          <button className="button button-primary" onClick={handleSubmit}>Create Event</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -476,6 +677,7 @@ export function Dashboard() {
   const [earnedBadges, setEarnedBadges] = useState<BadgeType[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [modalTarget, setModalTarget] = useState<{ type: "class" | "group"; id: string } | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -497,22 +699,44 @@ export function Dashboard() {
       const studentsData = await studentsRes.json();
       const allClassData = await allClassRes.json();
 
-      const classesWithTasks = await Promise.all(
+      const classesWithData = await Promise.all(
         classData.map(async (cls: Class) => {
-          const taskRes = await fetch(`/api/tasks?userId=${userId}&classId=${cls._id}&studyGroupId=null&isHidden=all`);
-          return { ...cls, tasks: await taskRes.json() };
+          const [taskRes, eventRes] = await Promise.all([
+            fetch(`/api/tasks?userId=${userId}&classId=${cls._id}&studyGroupId=null&isHidden=all`),
+            fetch(`/api/events?classId=${cls._id}`)
+          ]);
+          const tasks = await taskRes.json();
+          const eventsRaw = await eventRes.json();
+          
+          const eventsWithRSVPs = await Promise.all(eventsRaw.map(async (event: Event) => {
+            const rsvpRes = await fetch(`/api/events/${event._id}/rsvps`);
+            return { ...event, rsvps: await rsvpRes.json() };
+          }));
+
+          return { ...cls, tasks, events: eventsWithRSVPs };
         })
       );
 
-      const groupsWithTasks = await Promise.all(
+      const groupsWithData = await Promise.all(
         groupData.map(async (group: StudentGroup) => {
-          const taskRes = await fetch(`/api/tasks?userId=${userId}&studyGroupId=${group._id}&isHidden=all`);
-          return { ...group, tasks: await taskRes.json() };
+          const [taskRes, eventRes] = await Promise.all([
+            fetch(`/api/tasks?userId=${userId}&studyGroupId=${group._id}&isHidden=all`),
+            fetch(`/api/events?studyGroupId=${group._id}`)
+          ]);
+          const tasks = await taskRes.json();
+          const eventsRaw = await eventRes.json();
+
+          const eventsWithRSVPs = await Promise.all(eventsRaw.map(async (event: Event) => {
+            const rsvpRes = await fetch(`/api/events/${event._id}/rsvps`);
+            return { ...event, rsvps: await rsvpRes.json() };
+          }));
+
+          return { ...group, tasks, events: eventsWithRSVPs };
         })
       );
 
-      setClasses(classesWithTasks);
-      setGroups(groupsWithTasks);
+      setClasses(classesWithData);
+      setGroups(groupsWithData);
       setAllStudents(studentsData);
       
       const notEnrolled = allClassData.filter((ac: any) => 
@@ -700,9 +924,65 @@ export function Dashboard() {
     }
   };
 
+  const handleRSVP = async (eventId: string, status: "accepted" | "declined") => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    if (status === "accepted") {
+      const res = await fetch(`/api/events/${eventId}/rsvp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, status }),
+      });
+      if (res.ok) {
+        showToast("RSVP confirmed!");
+        fetchAll();
+      } else {
+        const data = await res.json();
+        showToast(data.message || "Failed to RSVP");
+      }
+    } else {
+      const res = await fetch(`/api/events/${eventId}/rsvp/${userId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        showToast("RSVP cancelled");
+        fetchAll();
+      }
+    }
+  };
+
+  const handleCreateEvent = async (data: Partial<Event>) => {
+    if (!modalTarget) return;
+    const userId = localStorage.getItem("userId");
+
+    const res = await fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...data,
+        createdBy: userId,
+        classId: modalTarget.type === "class" ? modalTarget.id : null,
+        studyGroupId: modalTarget.type === "group" ? modalTarget.id : null,
+      }),
+    });
+
+    if (res.ok) {
+      showToast("Event created!");
+      fetchAll();
+    } else {
+      showToast("Failed to create event");
+    }
+  };
+
   const openModal = (type: "class" | "group", id: string) => {
     setModalTarget({ type, id });
     setModalOpen(true);
+  };
+
+  const openEventModal = (type: "class" | "group", id: string) => {
+    setModalTarget({ type, id });
+    setShowCreateEvent(true);
   };
 
   // Weekly tracking init
@@ -800,6 +1080,8 @@ export function Dashboard() {
                     onToggleTask={(taskId) => toggleClassTask(cls._id, taskId)} 
                     onAddTask={() => openModal("class", cls._id)}
                     onToggleHide={handleToggleHideTask}
+                    onAddEvent={() => openEventModal("class", cls._id)}
+                    onRSVP={handleRSVP}
                   />
                 ))}
               </div>
@@ -820,6 +1102,8 @@ export function Dashboard() {
                     onToggleTask={toggleGroupTask} 
                     onAddTask={handleAddGroupTask}
                     onToggleHide={(_gid, tid) => handleToggleHideTask(tid)}
+                    onAddEvent={() => openEventModal("group", group._id)}
+                    onRSVP={handleRSVP}
                   />
                 ))}
               </div>
@@ -845,6 +1129,7 @@ export function Dashboard() {
       <AddTaskModal open={modalOpen} onClose={() => setModalOpen(false)} onAdd={handleAddTask} />
       {toast && <div className="toast">{toast}</div>}
       <CreateGroupModal open={showCreateGroup} onClose={() => setShowCreateGroup(false)} onAdd={handleCreateGroup} classes={classes} />
+      <CreateEventModal open={showCreateEvent} onClose={() => setShowCreateEvent(false)} onAdd={handleCreateEvent} />
       <ArchivedTasksModal 
         open={showArchived} 
         onClose={() => setShowArchived(false)} 
