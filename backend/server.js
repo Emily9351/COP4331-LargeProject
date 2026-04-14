@@ -124,7 +124,7 @@ app.post("/api/login", async (req, res) => {
     res.status(200).json({
       message: "Login successful!",
       userId: user._id,
-      role: user.role,   
+      role: user.role || "student",   
       name: user.name     
     });
   } catch (error) {
