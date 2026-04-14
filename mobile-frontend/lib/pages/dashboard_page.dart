@@ -75,7 +75,7 @@ class GroupModel {
 // ─────────────────────────────────────────────
 // API base URL
 // ─────────────────────────────────────────────
-const String _baseUrl = 'http://emilydensmore.com';
+const String _baseUrl = 'http://emilydensmore.com:5000';
 
 // ─────────────────────────────────────────────
 // Dashboard Page (Read-Only)
@@ -112,38 +112,24 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     try {
-      // 1. Fetch all classes
-      final classRes = await http.get(Uri.parse('$_baseUrl/api/classes'));
+      // 1. Fetch classes for this student
+      final classRes = await http.get(Uri.parse('$_baseUrl/api/classes?userId=$userId'));
       final classData = jsonDecode(classRes.body) as List;
+      final myClasses = classData.map((c) => ClassModel.fromJson(c)).toList();
 
-      // 2. Filter to this student's enrolled classes
-      final userRes  = await http.get(Uri.parse('$_baseUrl/api/users/$userId'));
-      final userData = jsonDecode(userRes.body);
-      final enrolledIds = List<String>.from(
-        (userData['enrolledClasses'] ?? []).map((c) => c is Map ? c['_id'] : c),
-      );
-
-      final myClasses = classData
-          .where((c) => enrolledIds.contains(c['_id']))
-          .map((c) => ClassModel.fromJson(c))
-          .toList();
-
-      // 3. Fetch tasks for each class
+      // 2. Fetch tasks for each class
       for (final cls in myClasses) {
         final taskRes  = await http.get(
-          Uri.parse('$_baseUrl/api/tasks?classId=${cls.id}'),
+          Uri.parse('$_baseUrl/api/tasks?userId=$userId&classId=${cls.id}&studyGroupId=null&isHidden=all'),
         );
         final taskData = jsonDecode(taskRes.body) as List;
         cls.tasks      = taskData.map((t) => TaskModel.fromJson(t)).toList();
       }
 
-      // 4. Fetch user's groups
-      final groupRes  = await http.get(Uri.parse('$_baseUrl/api/groups'));
+      // 3. Fetch user's groups
+      final groupRes  = await http.get(Uri.parse('$_baseUrl/api/groups?userId=$userId'));
       final groupData = jsonDecode(groupRes.body) as List;
-      final myGroups  = groupData
-          .where((g) => (g['memberIds'] as List).contains(userId))
-          .map((g) => GroupModel.fromJson(g))
-          .toList();
+      final myGroups  = groupData.map((g) => GroupModel.fromJson(g)).toList();
 
       setState(() {
         _classes = myClasses;
