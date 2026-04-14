@@ -1,15 +1,7 @@
 import { useEffect, useState } from "react";
-import {
-    LogOut,
-    Plus,
-    Trash2,
-    X,
-} from "lucide-react";
+import { LogOut, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { SearchableDropdown } from "../components/SearchableDropdown";
 import "../css/ProfessorDashboard.css";
-
-    /* ================= TYPES ================= */
 
 interface User {
     _id: string;
@@ -21,102 +13,75 @@ interface User {
 interface Task {
     _id: string;
     title: string;
-    description?: string;
     status: "todo" | "in_progress" | "done";
-    assignedToClass?: string;
-    assignedToGroup?: string;
 }
 
 interface Group {
     _id: string;
     name: string;
-    members: User[];
+    memberIds: User[];
 }
 
 interface Class {
     _id: string;
-    name: string;
-    students: User[];
+    courseCode: string;
+    title: string;
+    studentIds: User[];
     groups?: Group[];
 }
 
-type Student = {
-    _id: string;
-    name: string;
-    email: string;
-    role: "student";
-};
-
-
-
-    /* ================= COMPONENT ================= */
-
-    export function ProfessorDashboard() {
+export function ProfessorDashboard() {
     const [classes, setClasses] = useState<Class[]>([]);
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
-
     const [groups, setGroups] = useState<Group[]>([]);
-    const [students, setStudents] = useState<Student[]>([]);
+    const [students, setStudents] = useState<User[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
 
-    const [newClassName, setNewClassName] = useState("");
+    const [newCourseCode, setNewCourseCode] = useState("");
+    const [newTitle, setNewTitle] = useState("");
     const [newGroupName, setNewGroupName] = useState("");
-    const [studentUsername, setStudentUsername] = useState("");
+    const [selectedStudentId, setSelectedStudentId] = useState("");
 
-    const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+    const [taskTitle, setTaskTitle] = useState("");
 
-    const [taskInputs, setTaskInputs] = useState<
-        Record<string, { title: string; description: string }>
-    >({});
+    const [deleteModal, setDeleteModal] = useState<{ open: boolean; classId: string | null }>({
+        open: false, classId: null
+    });
 
-    const [groupInputs, setGroupInputs] = useState<Record<string, string>>({});
+    // Get these from localStorage — make sure login stores them!
+    const userId = localStorage.getItem("userId");
 
-    const [deleteModal, setDeleteModal] = useState<{
-        open: boolean;
-        classId: string | null;
-    }>({ open: false, classId: null });
-
-    const token = localStorage.getItem("token");
-
-    const parseJSON = async (res: Response) => {
-        const text = await res.text();
-        try {
-        return text ? JSON.parse(text) : null;
-        } catch {
-        return null;
+    /* ===== FETCH ALL CLASSES (filter by professorId client-side) ===== */
+    const fetchClasses = async () => {
+        const res = await fetch("/api/classes");
+        const data = await res.json();
+        if (res.ok) {
+            // Filter to only this professor's classes
+            const mine = data.filter((c: any) => c.professorId?._id === userId || c.professorId === userId);
+            setClasses(mine);
+        } else {
+            toast.error("Failed to load classes");
         }
     };
 
-    /* ================= FETCH CLASSES ================= */
-
-    const fetchClasses = async () => {
-        const res = await fetch("/api/classes/professor", {
-        headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = await parseJSON(res);
-
-        if (res.ok) setClasses(data || []);
-        else toast.error(data?.error || "Failed to load classes");
-    };
-
-    /* ================= FETCH STUDENTS ================= */
-
+    /* ===== FETCH ALL STUDENTS ===== */
     const fetchStudents = async () => {
-        setIsLoadingStudents(true);
-
-        try {
-        const res = await fetch("/api/users", {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = await parseJSON(res);
-
+        // Backend has no GET /api/users — we fetch from classes we know about
+        // Workaround: collect students already in our classes
+        const res = await fetch("/api/classes");
+        const data = await res.json();
         if (res.ok) {
-            setStudents((data || []).filter((u: User) => u.role === "student"));
-        } else toast.error("Failed to fetch students");
-        } finally {
-        setIsLoadingStudents(false);
+            const allStudents: User[] = [];
+            const seen = new Set();
+            data.forEach((c: any) => {
+                (c.studentIds || []).forEach((s: User) => {
+                    if (!seen.has(s._id)) {
+                        seen.add(s._id);
+                        allStudents.push(s);
+                    }
+                });
+            });
+            setStudents(allStudents);
         }
     };
 
@@ -125,440 +90,309 @@ type Student = {
         fetchStudents();
     }, []);
 
-    /* ================= FETCH TASKS ================= */
-
+    /* ===== FETCH TASKS ===== */
     const fetchTasks = async (classId: string) => {
-        const res = await fetch(`/api/tasks?classId=${classId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = await parseJSON(res);
-
-        if (res.ok) setTasks(data || []);
+        const res = await fetch(`/api/tasks?classId=${classId}`);
+        const data = await res.json();
+        if (res.ok) setTasks(data);
     };
 
-    /* ================= SELECT CLASS ================= */
-
+    /* ===== SELECT CLASS ===== */
     const handleSelectClass = async (cls: Class) => {
-        const res = await fetch(`/api/classes/${cls._id}/groups`, {
-        headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const groupsData = await res.json();
-
-        const classRes = await fetch("/api/classes/professor", {
-        headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const classesList = await classRes.json();
-
-        const fullClass = classesList.find((c: Class) => c._id === cls._id);
+        const [classRes, groupsRes] = await Promise.all([
+            fetch(`/api/classes/${cls._id}`),
+            fetch(`/api/classes/${cls._id}/groups`)
+        ]);
+        const fullClass = await classRes.json();
+        const groupsData = await groupsRes.json();
 
         setSelectedClass({ ...fullClass, groups: groupsData });
         setGroups(groupsData);
-
         fetchTasks(cls._id);
     };
 
-    /* ================= CLASS ACTIONS ================= */
-
+    /* ===== CREATE CLASS ===== */
     const createClass = async () => {
-    if (!newClassName) return;
+        if (!newCourseCode || !newTitle) return toast.error("Course code and title required");
 
-    const res = await fetch("/api/classes", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-            title: newClassName,
-            courseCode: "GEN101",
-            semester: "Fall",
-            section: "001",
-            professorId: localStorage.getItem("userId"), // OR decode token properly
-        }),
-    });
+        const res = await fetch("/api/classes", {   // ✅ was /api/classes/create
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ courseCode: newCourseCode, title: newTitle, professorId: userId }),
+        });
 
-    const data = await res.json();
+        if (res.ok) {
+            toast.success("Class created");
+            setNewCourseCode("");
+            setNewTitle("");
+            fetchClasses();
+        } else {
+            const data = await res.json();
+            toast.error(data.message);
+        }
+    };
 
-    if (!res.ok) {
-        toast.error(data.message || "Failed to create class");
-        return;
-    }
+    /* ===== DELETE CLASS ===== */
+    const deleteClass = async (classId: string) => {
+        await fetch(`/api/classes/${classId}`, { method: "DELETE" });
+        toast.success("Class deleted");
+        fetchClasses();
+    };
 
-    toast.success("Class created");
-    setNewClassName("");
-    fetchClasses();
-};
-
-    /* ================= GROUP ================= */
-
+    /* ===== CREATE GROUP ===== */
     const createGroup = async () => {
         if (!selectedClass || !newGroupName) return;
 
-        await fetch("/api/groups/create", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-            name: newGroupName,
-            classId: selectedClass._id,
-        }),
+        await fetch("/api/groups", {   // ✅ was /api/groups/create
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: newGroupName, classId: selectedClass._id, createdBy: userId }),
         });
 
         setNewGroupName("");
         handleSelectClass(selectedClass);
     };
 
+    /* ===== DELETE GROUP ===== */
     const deleteGroup = async (groupId: string) => {
-        await fetch(`/api/groups/${groupId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-        });
-
+        await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
         handleSelectClass(selectedClass!);
     };
 
-    /* ================= TASKS ================= */
-
-    const createTask = async (targetId: string, type: "class" | "group") => {
-        const input = taskInputs[targetId];
-        if (!input?.title) return;
-
-        const body: any = {
-        title: input.title,
-        description: input.description || "",
-        };
-
-        if (type === "class") body.assignedToClass = targetId;
-        if (type === "group") body.assignedToGroup = targetId;
-
-        await fetch("/api/tasks", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-        });
-
-        setTaskInputs((prev) => ({
-        ...prev,
-        [targetId]: { title: "", description: "" },
-        }));
-
-        if (selectedClass) handleSelectClass(selectedClass);
-    };
-
-    const deleteTask = async (taskId: string) => {
-        await fetch(`/api/tasks/${taskId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (selectedClass) handleSelectClass(selectedClass);
-    };
-
-    /* ================= STUDENTS ================= */
-
+    /* ===== ENROLL STUDENT ===== */
     const addStudent = async () => {
-        if (!selectedClass || !studentUsername) return;
+        if (!selectedClass || !selectedStudentId) return;
 
-        await fetch("/api/classes/join", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-            classId: selectedClass._id,
-            username: studentUsername,
-        }),
+        const res = await fetch(`/api/classes/${selectedClass._id}/enroll`, {   // ✅ was /api/classes/join
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: selectedStudentId }),   // ✅ sends userId not username
         });
 
-        setStudentUsername("");
-        handleSelectClass(selectedClass);
-    };
-
-    const removeStudent = async (studentId: string) => {
-        await fetch(
-        `/api/classes/${selectedClass!._id}/remove-student/${studentId}`,
-        {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
+        if (res.ok) {
+            toast.success("Student enrolled");
+            setSelectedStudentId("");
+            handleSelectClass(selectedClass);
+        } else {
+            const data = await res.json();
+            toast.error(data.message);
         }
-        );
+    };
+
+    /* ===== REMOVE STUDENT ===== */
+    const removeStudent = async (studentId: string) => {
+        await fetch(`/api/classes/${selectedClass!._id}/enroll/${studentId}`, {   // ✅ was /remove-student/
+            method: "DELETE",
+        });
+        handleSelectClass(selectedClass!);
+    };
+
+    /* ===== ADD TO GROUP ===== */
+    const addToGroup = async (groupId: string, memberId: string) => {
+        if (!memberId) return;
+
+        await fetch(`/api/groups/${groupId}/members`, {   // ✅ was /api/groups/:id/add
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: memberId }),
+        });
 
         handleSelectClass(selectedClass!);
     };
 
-    const addToGroup = async (groupId: string) => {
-        const username = groupInputs[groupId];
-        if (!username) return;
+    /* ===== CREATE TASK ===== */
+    const createTask = async () => {
+        if (!selectedClass || !taskTitle) return;
 
-        await fetch(`/api/groups/${groupId}/add`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ username }),
+        const res = await fetch("/api/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: taskTitle,
+                assignedTo: userId,   // ✅ backend requires this field
+                classId: selectedClass._id,
+            }),
         });
 
-        setGroupInputs((p) => ({ ...p, [groupId]: "" }));
-        handleSelectClass(selectedClass!);
+        if (res.ok) {
+            toast.success("Task created");
+            setTaskTitle("");
+            fetchTasks(selectedClass._id);
+        }
+    };
+
+    /* ===== DELETE TASK ===== */
+    const deleteTask = async (taskId: string) => {
+        await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+        if (selectedClass) fetchTasks(selectedClass._id);
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
+        localStorage.clear();
         window.location.href = "/";
     };
 
-    /* ================= UI ================= */
-
+    /* ===== UI ===== */
     return (
         <div className="dashboard-page">
-        <div className="overlay">
+            <div className="overlay">
 
-            {/* NAVBAR */}
-            <div className="dashboard-navbar">
-            <div className="dashboard-brand">
-                <div className="logo" />
-                <div>
-                <p className="name">Professor Dashboard</p>
-                <p className="subtitle">Class Management System</p>
-                </div>
-            </div>
-
-            <button className="button" onClick={handleLogout}>
-                <LogOut size={16} /> Logout
-            </button>
-            </div>
-
-            {/* CONTENT */}
-            <div className="dashboard-content">
-
-            {!selectedClass && (
-                <>
-                <div className="card house-card">
-                    <h2>Create Class</h2>
-
-                    <input
-                    value={newClassName}
-                    onChange={(e) => setNewClassName(e.target.value)}
-                    placeholder="Class name"
-                    />
-
-                    <button className="button button-primary" onClick={createClass}>
-                    <Plus size={16} /> Create
+                {/* NAVBAR */}
+                <div className="dashboard-navbar">
+                    <div className="dashboard-brand">
+                        <div className="logo" />
+                        <div>
+                            <p className="name">Professor Dashboard</p>
+                            <p className="subtitle">Class Management System</p>
+                        </div>
+                    </div>
+                    <button className="button" onClick={handleLogout}>
+                        <LogOut size={16} /> Logout
                     </button>
                 </div>
 
-                <div className="card badge-card">
-                    <h2>Your Classes</h2>
+                <div className="dashboard-content">
 
-                    {classes.map((c) => (
-                    <div key={c._id} className="content-card">
-                        <div className="content-card-header">
-                        <div>
-                            <div className="content-card-title">{c.name}</div>
-                            <div className="content-card-meta">
-                            {c.students?.length || 0} students •{" "}
-                            {c.groups?.length || 0} groups
+                    {/* CLASS LIST VIEW */}
+                    {!selectedClass && (
+                        <>
+                            <div className="card house-card">
+                                <h2>Create Class</h2>
+                                <input value={newCourseCode} onChange={(e) => setNewCourseCode(e.target.value)} placeholder="Course code (e.g. COP4331)" />
+                                <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Class title" />
+                                <button className="button button-primary" onClick={createClass}>
+                                    <Plus size={16} /> Create
+                                </button>
+                            </div>
+
+                            <div className="card badge-card">
+                                <h2>Your Classes</h2>
+                                {classes.length === 0 && <p style={{ color: "#94a3b8" }}>No classes yet.</p>}
+                                {classes.map((c) => (
+                                    <div key={c._id} className="content-card">
+                                        <div className="content-card-header">
+                                            <div>
+                                                <div className="content-card-title">{c.courseCode} — {c.title}</div>
+                                                <div className="content-card-meta">
+                                                    {c.studentIds?.length || 0} students
+                                                </div>
+                                            </div>
+                                            <button className="button" onClick={() => setDeleteModal({ open: true, classId: c._id })}>
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                        <button className="button button-primary" onClick={() => handleSelectClass(c)}>
+                                            Manage →
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {/* CLASS DETAIL VIEW */}
+                    {selectedClass && (
+                        <div className="card house-card">
+                            <button className="button" onClick={() => setSelectedClass(null)}>← Back</button>
+                            <h2>{selectedClass.courseCode} — {selectedClass.title}</h2>
+
+                            {/* Students */}
+                            <h3>Students</h3>
+                            {(selectedClass.studentIds || []).map((s) => (
+                                <div key={s._id} className="task-item">
+                                    {s.name} ({s.email})
+                                    <button className="button" onClick={() => removeStudent(s._id)}>
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ))}
+
+                            <div className="content-card">
+                                <h4>Enroll Student by ID</h4>
+                                <input
+                                    value={selectedStudentId}
+                                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                                    placeholder="Paste student user ID"
+                                />
+                                <button className="button button-primary" onClick={addStudent}>
+                                    Enroll
+                                </button>
+                            </div>
+
+                            {/* Tasks */}
+                            <h3>Tasks</h3>
+                            <div className="content-card">
+                                <input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} placeholder="Task title" />
+                                <button className="button button-primary" onClick={createTask}>
+                                    <Plus size={16} /> Create Task
+                                </button>
+                            </div>
+                            {tasks.length === 0 && <p style={{ color: "#94a3b8" }}>No tasks yet.</p>}
+                            {tasks.map((t) => (
+                                <div key={t._id} className="task-item">
+                                    <div>
+                                        <div>{t.title}</div>
+                                        <small>{t.status}</small>
+                                    </div>
+                                    <button className="button" onClick={() => deleteTask(t._id)}>
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            ))}
+
+                            {/* Groups */}
+                            <h3>Groups</h3>
+                            <div className="content-card">
+                                <h4>Create Group</h4>
+                                <input value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} placeholder="Group name" />
+                                <button className="button button-primary" onClick={createGroup}>
+                                    <Plus size={16} /> Create Group
+                                </button>
+                            </div>
+
+                            {groups.map((g) => (
+                                <div key={g._id} className="content-card">
+                                    <div className="content-card-header">
+                                        <h4>{g.name}</h4>
+                                        <button className="button" onClick={() => deleteGroup(g._id)}>
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                    {(g.memberIds || []).map((m) => (
+                                        <div key={m._id} className="task-item">{m.name}</div>
+                                    ))}
+                                    <input
+                                        placeholder="Paste student user ID to add"
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") addToGroup(g._id, (e.target as HTMLInputElement).value);
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* DELETE MODAL */}
+                {deleteModal.open && (
+                    <div className="modal-backdrop">
+                        <div className="modal-box">
+                            <h3 className="modal-title">Delete class?</h3>
+                            <div className="modal-actions">
+                                <button className="button" onClick={() => setDeleteModal({ open: false, classId: null })}>
+                                    Cancel
+                                </button>
+                                <button className="button button-primary" onClick={() => {
+                                    deleteClass(deleteModal.classId!);
+                                    setDeleteModal({ open: false, classId: null });
+                                }}>
+                                    Delete
+                                </button>
                             </div>
                         </div>
-
-                        <button
-                            className="button"
-                            onClick={() => setDeleteModal({ open: true, classId: c._id })}
-                        >
-                            <Trash2 size={14} />
-                        </button>
-                        </div>
-
-                        <button
-                        className="button button-primary"
-                        onClick={() => handleSelectClass(c)}
-                        >
-                        Manage →
-                        </button>
                     </div>
-                    ))}
-                </div>
-                </>
-            )}
-
-            {/* CLASS VIEW */}
-            {selectedClass && (
-                <div className="card house-card">
-
-                <h2>{selectedClass.name}</h2>
-
-                <button className="button" onClick={() => setSelectedClass(null)}>
-                    ← Back
-                </button>
-
-                {/* Students */}
-                <h3>Students</h3>
-
-                {selectedClass.students?.map((s) => (
-                    <div key={s._id} className="task-item">
-                    {s.name}
-                    <button onClick={() => removeStudent(s._id)}>
-                        <X size={14} />
-                    </button>
-                    </div>
-                ))}
-
-                {/* Add student */}
-                <SearchableDropdown
-                    value={studentUsername}
-                    onChange={setStudentUsername}
-                    students={students}
-                    isLoading={isLoadingStudents}
-                    placeholder="Add student"
-                />
-
-                <button className="button button-primary" onClick={addStudent}>
-                    Add
-                </button>
-
-                <div className="content-card">
-    <h4>Create Task (Class)</h4>
-
-    <input
-        placeholder="Task title"
-        value={taskInputs[selectedClass._id]?.title || ""}
-        onChange={(e) =>
-            setTaskInputs((prev) => ({
-                ...prev,
-                [selectedClass._id]: {
-                    ...prev[selectedClass._id],
-                    title: e.target.value,
-                },
-            }))
-        }
-    />
-
-        <input
-            placeholder="Task description"
-            value={taskInputs[selectedClass._id]?.description || ""}
-            onChange={(e) =>
-                setTaskInputs((prev) => ({
-                    ...prev,
-                    [selectedClass._id]: {
-                        ...prev[selectedClass._id],
-                        description: e.target.value,
-                    },
-                }))
-            }
-        />
-
-        <button
-            className="button button-primary"
-            onClick={() => createTask(selectedClass._id, "class")}
-        >
-            <Plus size={16} /> Create Task
-        </button>
-    </div>
-
-                {/* Groups */}
-                <h3>Groups</h3>
-
-                <div className="content-card">
-                    <h4>Create Group</h4>
-
-                    <input
-                        value={newGroupName}
-                        onChange={(e) => setNewGroupName(e.target.value)}
-                        placeholder="Group name"
-                    />
-
-                    <button className="button button-primary" onClick={createGroup}>
-                        <Plus size={16} /> Create Group
-                    </button>
-                </div>
-
-                {groups.map((g) => (
-                    <div key={g._id} className="content-card">
-                    <h4>{g.name}</h4>
-
-                    <button onClick={() => deleteGroup(g._id)}>
-                        Delete
-                    </button>
-
-                    <SearchableDropdown
-                        value={groupInputs[g._id] || ""}
-                        onChange={(v) =>
-                        setGroupInputs((p) => ({ ...p, [g._id]: v }))
-                        }
-                        students={students}
-                        isLoading={isLoadingStudents}
-                        placeholder="Add to group"
-                    />
-
-                    <button onClick={() => addToGroup(g._id)}>
-                        Add
-                    </button>
-                    </div>
-                ))}
-
-                </div>
-            )}
-
-            <h3>Tasks</h3>
-
-            {tasks.length === 0 && <p>No tasks yet</p>}
-
-            {tasks.map((t) => (
-                <div key={t._id} className="task-item">
-                    <div>
-                        <div>{t.title}</div>
-                        <small>{t.status}</small>
-                    </div>
-
-                    <button onClick={() => deleteTask(t._id)}>
-                        <Trash2 size={14} />
-                    </button>
-                </div>
-            ))}
-
-            
-
+                )}
             </div>
-
-            {/* DELETE MODAL */}
-            {deleteModal.open && (
-            <div className="modal-backdrop">
-                <div className="modal-box">
-                <h3 className="modal-title">Delete class?</h3>
-
-                <div className="modal-actions">
-                    <button
-                    className="button"
-                    onClick={() => setDeleteModal({ open: false, classId: null })}
-                    >
-                    Cancel
-                    </button>
-
-                    <button
-                    className="button button-primary"
-                    onClick={() => {
-                        deleteClass(deleteModal.classId!);
-                        setDeleteModal({ open: false, classId: null });
-                    }}
-                    >
-                    Delete
-                    </button>
-                </div>
-                </div>
-            </div>
-            )}
-
-        </div>
         </div>
     );
 }
