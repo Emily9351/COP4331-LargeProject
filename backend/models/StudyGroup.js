@@ -32,6 +32,10 @@ const StudyGroupSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    allowStudentTasks: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true },
 );

@@ -455,14 +455,17 @@ app.get("/api/groups/:id", async (req, res) => {
 // Update a group 
 app.put("/api/groups/:id", async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, description, isPublic, allowStudentTasks } = req.body;
  
-    if (!name)
-      return res.status(400).json({ message: "Group name is required" });
+    const update = {};
+    if (name) update.name = name;
+    if (description !== undefined) update.description = description;
+    if (isPublic !== undefined) update.isPublic = isPublic;
+    if (allowStudentTasks !== undefined) update.allowStudentTasks = allowStudentTasks;
  
     const group = await StudyGroup.findByIdAndUpdate(
       req.params.id,
-      { name },
+      update,
       { new: true }
     );
  

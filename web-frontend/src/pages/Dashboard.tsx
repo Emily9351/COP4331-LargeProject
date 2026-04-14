@@ -28,6 +28,8 @@ interface StudentGroup {
   description: string;
   memberIds: string[];
   classId: string;
+  allowStudentTasks?: boolean;
+  tasks?: Task[];
   createdBy?: {
     _id: string;
     role: string;
@@ -715,6 +717,57 @@ export function Dashboard() {
             {activeTab === "browse" && (
               <div className="tab-content-grid">
                 {availableClasses.length === 0 && <p className="empty-msg">No new classes available to join.</p>}
+                {availableClasses.map((cls) => (
+                  <div key={cls._id} className="content-card">
+                     <div className="content-card-header">
+                        <div>
+                           <h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3>
+                           <p className="content-card-meta">{cls.semester}</p>
+                        </div>
+                        <button className="button button-primary" onClick={() => handleJoinClass(cls._id)}>Join</button>
+                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>{/* end dashboard-content */}
+      </div>{/* end overlay */}
+
+      {/* Add Task Modal */}
+      <AddTaskModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onAdd={handleAddTask}
+      />
+
+      {/* Toast */}
+      {toast && <div className="toast">{toast}</div>}
+
+      <CreateGroupModal
+        open={showCreateGroup}
+        onClose={() => setShowCreateGroup(false)}
+        onAdd={handleCreateGroup}
+        classes={classes}
+      />
+    </div>
+  );
+}     classes={classes}
+      />
+    </div>
+  );
+}
+
+      <CreateGroupModal
+        open={showCreateGroup}
+        onClose={() => setShowCreateGroup(false)}
+        onAdd={handleCreateGroup}
+        classes={classes}
+      />
+    </div>
+  );
+}g">No new classes available to join.</p>}
                 {availableClasses.map((cls) => (
                   <div key={cls._id} className="content-card">
                      <div className="content-card-header">

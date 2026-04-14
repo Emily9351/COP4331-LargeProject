@@ -134,10 +134,16 @@ export function ProfessorDashboard() {
         await fetch("/api/groups", {   // ✅ was /api/groups/create
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: newGroupName, classId: selectedClass._id, createdBy: userId }),
+            body: JSON.stringify({ 
+                name: newGroupName, 
+                classId: selectedClass._id, 
+                createdBy: userId,
+                allowStudentTasks: allowStudentTasks 
+            }),
         });
 
         setNewGroupName("");
+        setAllowStudentTasks(true);
         handleSelectClass(selectedClass);
     };
 
@@ -351,13 +357,32 @@ export function ProfessorDashboard() {
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
+                                    <div style={{ marginBottom: '10px' }}>
+                                        <span className="content-card-meta">
+                                            {(g as any).allowStudentTasks ? "✅ Students can add tasks" : "🔒 Professor-only tasks"}
+                                        </span>
+                                    </div>
+                                    
+                                    <h5>Members</h5>
                                     {(g.memberIds || []).map((m) => (
                                         <div key={m._id} className="task-item">{m.name}</div>
                                     ))}
-                                    <div style={{ marginTop: '10px' }}>
+                                    
+                                    <h5 style={{ marginTop: '15px' }}>Group Tasks</h5>
+                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                                        <input 
+                                            placeholder="Group task title" 
+                                            value={groupTaskTitles[g._id] || ""} 
+                                            onChange={(e) => setGroupTaskTitles(prev => ({ ...prev, [g._id]: e.target.value }))}
+                                            style={{ flex: 1, padding: '8px', borderRadius: '4px', background: '#1e293b', color: 'white', border: '1px solid #334155' }}
+                                        />
+                                        <button className="button button-primary" onClick={() => createGroupTask(g._id)}>Add</button>
+                                    </div>
+
+                                    <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
                                         <select 
                                             className="input"
-                                            style={{ width: '100%', padding: '8px', borderRadius: '4px', background: '#1e293b', color: 'white', border: '1px solid #334155' }}
+                                            style={{ flex: 1, padding: '8px', borderRadius: '4px', background: '#1e293b', color: 'white', border: '1px solid #334155' }}
                                             onChange={(e) => {
                                                 if (e.target.value) {
                                                     addToGroup(g._id, e.target.value);
@@ -365,7 +390,7 @@ export function ProfessorDashboard() {
                                                 }
                                             }}
                                         >
-                                            <option value="">Add member by name...</option>
+                                            <option value="">Add member...</option>
                                             {students.map(s => (
                                                 <option key={s._id} value={s._id}>{s.name} ({s.email})</option>
                                             ))}

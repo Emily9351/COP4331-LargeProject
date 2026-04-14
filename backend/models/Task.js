@@ -22,6 +22,11 @@ const TaskSchema = new mongoose.Schema(
       ref: "Class",
       default: null,
     },
+    studyGroupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StudyGroup",
+      default: null,
+    },
     // Optionally, we can link this task to an event
     linkedEventId: {
       type: mongoose.Schema.Types.ObjectId,
