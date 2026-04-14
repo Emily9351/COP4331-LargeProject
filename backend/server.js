@@ -427,7 +427,8 @@ app.get("/api/groups", async (req, res) => {
 
     const groups = await StudyGroup.find(filter)
       .populate("memberIds", "name email")
-      .populate("classId", "courseCode title");
+      .populate("classId", "courseCode title")
+      .populate("createdBy", "name email role");
  
     res.json(groups);
   } catch (error) {

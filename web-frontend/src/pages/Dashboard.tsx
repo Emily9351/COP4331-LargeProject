@@ -28,6 +28,10 @@ interface StudentGroup {
   description: string;
   memberIds: string[];
   classId: string;
+  createdBy?: {
+    _id: string;
+    role: string;
+  };
 }
 
 interface BadgeType {
@@ -121,6 +125,8 @@ function GroupCard({
   allStudents: { _id: string; name: string; email: string }[];
   onAddMember: (groupId: string, userId: string) => void;
 }) {
+  const isProfessorCreated = group.createdBy?.role === "professor";
+
   return (
     <div className="content-card">
       <div className="content-card-header">
@@ -128,26 +134,29 @@ function GroupCard({
           <h3 className="content-card-title">{group.name}</h3>
           <span className="content-card-meta">
             {group.memberIds.length} members · {group.description}
+            {isProfessorCreated && <div style={{ color: "#38bdf8", fontSize: "0.8rem", marginTop: "4px" }}>Professor Managed</div>}
           </span>
         </div>
       </div>
-      <div className="group-members-actions" style={{ marginTop: '15px' }}>
-        <select 
-          className="modal-input"
-          style={{ width: '100%', marginBottom: '10px' }}
-          onChange={(e) => {
-            if (e.target.value) {
-              onAddMember(group._id, e.target.value);
-              e.target.value = "";
-            }
-          }}
-        >
-          <option value="">Add member by name...</option>
-          {allStudents.filter(s => !group.memberIds.includes(s._id)).map(s => (
-            <option key={s._id} value={s._id}>{s.name} ({s.email})</option>
-          ))}
-        </select>
-      </div>
+      {!isProfessorCreated && (
+        <div className="group-members-actions" style={{ marginTop: '15px' }}>
+          <select 
+            className="modal-input"
+            style={{ width: '100%', marginBottom: '10px' }}
+            onChange={(e) => {
+              if (e.target.value) {
+                onAddMember(group._id, e.target.value);
+                e.target.value = "";
+              }
+            }}
+          >
+            <option value="">Add member by name...</option>
+            {allStudents.filter(s => !group.memberIds.includes(s._id)).map(s => (
+              <option key={s._id} value={s._id}>{s.name} ({s.email})</option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }
