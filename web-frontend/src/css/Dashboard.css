@@ -524,12 +524,12 @@ html, body {
 }
 
 .add-task-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 2px solid #718096;
   background: white;
-  font-size: 1.2rem;
+  font-size: 1rem;
   line-height: 1;
   color: #1e3a8a;
   cursor: pointer;
