@@ -562,7 +562,8 @@ export function Dashboard() {
   );
 
   const handleLogout = () => {
-    // navigate("/");
+    localStorage.clear();
+    window.location.href = "/";
   };
 
   if (loading) {
