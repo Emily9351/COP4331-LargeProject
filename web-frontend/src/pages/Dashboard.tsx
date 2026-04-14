@@ -1044,12 +1044,12 @@ export function Dashboard() {
 
         <div className="dashboard-content">
           <div className="cards-grid">
-            <div className="card house-card">
+            <div className="card house-card" style={{background:'#f1ffa6'}}>
               <h2>Weekly Progress Adventure</h2>
               <div className="subtitle">Complete tasks to add balloons! Resets every Sunday.</div>
               <HouseWithBalloons count={weeklyCount} />
             </div>
-            <div className="card badge-card">
+            <div className="card badge-card" style={{background:'#f1ffa6'}}>
               <h2>Achievement Badges</h2>
               <div className="subtitle">Earn badges by completing tasks each week!</div>
               <BadgeSash earnedBadges={earnedBadges} currentWeekTasks={weeklyCount} />

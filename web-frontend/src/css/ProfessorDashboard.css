@@ -3,15 +3,18 @@
 .dashboard-page {
     min-height: 100vh;
     width: 100%;
-    background: #0f172a; /* dark slate */
-    color: #e2e8f0;
+    background: #87CEEB; /* Sky blue */
+    color: #0c4a6e;
     font-family: Arial, Helvetica, sans-serif;
     background-image: url('../assets/UpBackground.png');
+    background-size: cover;
+    background-position: center;
 }
 
 .overlay {
     min-height: 100vh;
     padding: 20px;
+    background: rgba(0, 0, 0, 0.4);
 }
 
 /* ================= NAVBAR ================= */
@@ -21,10 +24,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    background: #111827;
+    background: #f0f9ff;
     border-radius: 12px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid #bae6fd;
 }
 
 .dashboard-brand {
@@ -37,25 +41,26 @@
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
 }
 
 .name {
     font-weight: 700;
     font-size: 16px;
+    color: #111;
 }
 
 .subtitle {
     font-size: 12px;
-    color: #94a3b8;
+    color: #64748b;
 }
 
 /* ================= BUTTONS ================= */
 
 .button {
-    background: #1f2937;
-    color: #e2e8f0;
-    border: none;
+    background: #ffffff;
+    color: #111;
+    border: 1px solid #bae6fd;
     padding: 8px 12px;
     border-radius: 8px;
     cursor: pointer;
@@ -63,18 +68,21 @@
     align-items: center;
     gap: 6px;
     transition: 0.2s;
+    font-size: 14px;
 }
 
 .button:hover {
-    background: #374151;
+    background: #f0f9ff;
 }
 
 .button-primary {
-    background: #4f46e5;
+    background: #2563eb;
+    color: white;
+    border: none;
 }
 
 .button-primary:hover {
-    background: #4338ca;
+    background: #1d4ed8;
 }
 
 /* ================= CARDS ================= */
@@ -85,27 +93,25 @@
 }
 
 .card {
-    background: #111827;
+    background: #f0f9ff;
     padding: 20px;
     border-radius: 14px;
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+    border: 1px solid #bae6fd;
 }
 
-.house-card {
+.house-card, .badge-card {
     max-width: 900px;
     margin: auto;
-}
-
-.badge-card {
-    max-width: 900px;
-    margin: auto;
+    background-color: #f1ffa6; /* Yellow-green as requested for student, matching for consistency or keeping professor distinct? User said ALL house/badge cards. */
 }
 
 .content-card {
-    background: #1f2937;
+    background: #ffffff;
     padding: 14px;
     border-radius: 10px;
     margin-top: 10px;
+    border: 1px solid #bae6fd;
 }
 
 .content-card-header {
@@ -116,28 +122,30 @@
 
 .content-card-title {
     font-weight: 600;
+    color: #111;
 }
 
 .content-card-meta {
     font-size: 12px;
-    color: #94a3b8;
+    color: #4b5563;
 }
 
 /* ================= INPUTS ================= */
 
-input {
+input, select, textarea {
     width: 100%;
     padding: 10px;
     margin-top: 10px;
     border-radius: 8px;
-    border: 1px solid #374151;
-    background: #0f172a;
-    color: white;
+    border: 1px solid #bae6fd;
+    background: #ffffff;
+    color: #111;
     outline: none;
+    box-sizing: border-box; /* Fit inside containers */
 }
 
-input:focus {
-    border-color: #4f46e5;
+input:focus, select:focus, textarea:focus {
+    border-color: #0ea5e9;
 }
 
 /* ================= TASK / LIST ITEMS ================= */
@@ -146,10 +154,11 @@ input:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #1f2937;
+    background: #f0f9ff;
     padding: 10px;
     border-radius: 8px;
     margin-top: 8px;
+    border: 1px solid #e0f2fe;
 }
 
 /* ================= MODAL ================= */
@@ -160,27 +169,34 @@ input:focus {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.6);
+    background: rgba(15, 23, 42, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 
 .modal-box {
-    background: #111827;
-    padding: 20px;
+    background: #f0f9ff;
+    padding: 25px;
     border-radius: 12px;
-    width: 300px;
+    width: 90%;
+    max-width: 450px;
+    border: 1px solid #bae6fd;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
 .modal-title {
     margin-bottom: 12px;
+    color: #0c4a6e;
+    font-weight: 700;
 }
 
 .modal-actions {
     display: flex;
-    justify-content: space-between;
-    margin-top: 12px;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
 }
 
 /* ================= DROPDOWN ================= */
@@ -191,25 +207,27 @@ input:focus {
 }
 
 .dropdown-trigger {
-    background: #1f2937;
+    background: #ffffff;
     padding: 10px;
     border-radius: 8px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border: 1px solid #bae6fd;
 }
 
 .dropdown-menu {
     position: absolute;
     width: 100%;
-    background: #111827;
+    background: #ffffff;
     border-radius: 8px;
     margin-top: 6px;
     max-height: 250px;
     overflow-y: auto;
-    z-index: 10;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    z-index: 1010;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid #bae6fd;
 }
 
 .dropdown-search {
@@ -217,7 +235,7 @@ input:focus {
     align-items: center;
     gap: 6px;
     padding: 8px;
-    border-bottom: 1px solid #374151;
+    border-bottom: 1px solid #e0f2fe;
 }
 
 .dropdown-search input {
@@ -230,20 +248,23 @@ input:focus {
     display: flex;
     align-items: center;
     gap: 10px;
+    color: #4b5563;
 }
 
 .dropdown-item:hover {
-    background: #1f2937;
+    background: #f0f9ff;
+    color: #0c4a6e;
 }
 
 .dropdown-item.selected {
-    background: #4f46e5;
+    background: #2563eb;
+    color: white;
 }
 
 .dropdown-loading,
 .dropdown-empty {
     padding: 10px;
-    color: #94a3b8;
+    color: #64748b;
 }
 
 /* ================= ICON HELPERS ================= */
