@@ -840,6 +840,7 @@ app.delete("/api/tasks/:id", async (req, res) => {
         title: task.title,
         classId: task.classId,
         studyGroupId: task.studyGroupId,
+        createdBy: task.createdBy,
         isMaster: false
       });
     }

@@ -38,6 +38,7 @@ export function ProfessorDashboard() {
     const [groups, setGroups] = useState<Group[]>([]);
     const [students, setStudents] = useState<User[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [groupTasks, setGroupTasks] = useState<{ [groupId: string]: Task[] }>({});
 
     const [newCourseCode, setNewCourseCode] = useState("");
     const [newTitle, setNewTitle] = useState("");
@@ -89,17 +90,26 @@ export function ProfessorDashboard() {
         if (res.ok) setTasks(data);
     };
 
+    const fetchGroupTasks = async (groupId: string) => {
+        const res = await fetch(`/api/tasks?studyGroupId=${groupId}`);
+        const data = await res.json();
+        if (res.ok) setGroupTasks(prev => ({ ...prev, [groupId]: data }));
+    };
+
     const refreshSelectedClassData = async (classId: string) => {
         const [classRes, groupsRes] = await Promise.all([
             fetch(`/api/classes/${classId}`),
             fetch(`/api/classes/${classId}/groups`)
         ]);
         const fullClass = await classRes.json();
-        const groupsData = await groupsRes.json();
+        const groupsData = await groupsRes.json() as Group[];
 
         setSelectedClass({ ...fullClass, groups: groupsData });
         setGroups(groupsData);
         fetchTasks(classId);
+
+        // Fetch tasks for each group
+        groupsData.forEach(g => fetchGroupTasks(g._id));
     };
 
     const handleSelectClass = async (cls: Class) => {
@@ -199,6 +209,15 @@ export function ProfessorDashboard() {
             body: JSON.stringify({ userId: memberId }),
         });
 
+        if (res.ok && selectedClass) {
+            refreshSelectedClassData(selectedClass._id);
+        }
+    };
+
+    const removeFromGroup = async (groupId: string, userId: string) => {
+        const res = await fetch(`/api/groups/${groupId}/members/${userId}`, {
+            method: "DELETE",
+        });
         if (res.ok && selectedClass) {
             refreshSelectedClassData(selectedClass._id);
         }
@@ -366,8 +385,31 @@ export function ProfessorDashboard() {
                                     <div className="content-card-header"><h4>{g.name}</h4><button className="button" onClick={() => deleteGroup(g._id)}><Trash2 size={14} /></button></div>
                                     <div style={{ marginBottom: '10px' }}><span className="content-card-meta">{g.allowStudentTasks ? "✅ Students can add tasks" : "🔒 Professor-only tasks"}</span></div>
                                     <h5 style={{ color: 'white', marginBottom: '5px' }}>Members</h5>
-                                    {(g.memberIds || []).map((m) => (<div key={m._id} className="task-item">{m.name}</div>))}
+                                    {(g.memberIds || []).map((m) => (
+                                        <div key={m._id} className="task-item">
+                                            {m.name}
+                                            <button className="button" onClick={() => removeFromGroup(g._id, m._id)} title="Remove from group">
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    
                                     <h5 style={{ marginTop: '15px', color: 'white', marginBottom: '5px' }}>Group Tasks</h5>
+                                    <div className="task-list" style={{ marginBottom: '10px' }}>
+                                        {(groupTasks[g._id] || []).map((gt) => (
+                                            <div key={gt._id} className="task-item">
+                                                <div>
+                                                    <div>{gt.title}</div>
+                                                    <small>{gt.dueDate ? new Date(gt.dueDate).toLocaleDateString() : 'No due date'}</small>
+                                                </div>
+                                                <button className="button" onClick={() => deleteTask(gt._id)}>
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {(groupTasks[g._id] || []).length === 0 && <p style={{ color: "#94a3b8", fontSize: "0.8rem" }}>No group tasks.</p>}
+                                    </div>
+
                                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                                         <input placeholder="Group task title" value={groupTaskTitles[g._id] || ""} onChange={(e) => setGroupTaskTitles(prev => ({ ...prev, [g._id]: e.target.value }))} style={{ flex: 1, padding: '8px', borderRadius: '4px', background: '#1e293b', color: 'white', border: '1px solid #334155' }} />
                                         <button className="button button-primary" onClick={() => createGroupTask(g._id)}>Add</button>
