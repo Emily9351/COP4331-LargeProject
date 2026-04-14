@@ -369,11 +369,11 @@ html, body {
 
 /* ── Content cards (class/group) ── */
 .content-card {
-  background: rgba(240, 249, 255, 0.97);
+  background: #00112b;
+  border: 1px solid #fafdff;
   border-radius: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  border: 1px solid #bae6fd;
 }
 
 .content-card-header {
@@ -389,12 +389,12 @@ html, body {
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 2px;
-  color: #111;
+  color: #9ab4ff;
 }
 
 .content-card-meta {
   font-size: 0.75rem;
-  color: #4b5563;
+  color: #adadad;
 }
 
 .add-task-btn {
@@ -431,10 +431,12 @@ html, body {
   padding: 0.6rem 1.25rem;
   cursor: pointer;
   transition: background-color 0.15s;
+  background: #7c9db3;
+  border: 1px solid #000000;
 }
 
 .task-item:hover {
-  background: #f9fafb;
+  background: #3e4ad9;
 }
 
 .task-checkbox {
@@ -455,13 +457,18 @@ html, body {
 
 .task-title {
   font-size: 0.875rem;
-  color: #111;
+  color: #ffffff;
   line-height: 1.4;
+}
+
+.task-title:hover {
+  color: #ffffff;
+
 }
 
 .task-completed {
   text-decoration: line-through;
-  color: #9ca3af;
+  color: #ffffff;
 }
 
 .task-due {
