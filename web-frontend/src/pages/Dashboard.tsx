@@ -744,7 +744,7 @@ export function Dashboard() {
                     onAddMember={handleAddMemberToGroup} 
                     onToggleTask={toggleGroupTask} 
                     onAddTask={handleAddGroupTask}
-                    onToggleHide={(gid, tid) => handleToggleHideTask(tid)}
+                    onToggleHide={(_gid, tid) => handleToggleHideTask(tid)}
                   />
                 ))}
               </div>
