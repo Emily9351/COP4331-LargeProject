@@ -12,6 +12,7 @@ interface Task {
   priority: "low" | "medium" | "high";
   type: string;
   classId?: string;
+  studyGroupId?: string;
 }
 
 interface Class {
@@ -84,7 +85,7 @@ function TaskItem({
         <span className={`task-title ${isDone ? "task-completed" : ""}`}>
           {task.title}
         </span>
-        <span className="task-due">Due: {task.dueDate}</span>
+        <span className="task-due">Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}</span>
       </div>
     </div>
   );
@@ -366,7 +367,6 @@ function CreateGroupModal({
 
 // --- Main Dashboard ---
 export function Dashboard() {
-  // const navigate = useNavigate();
   const [classes, setClasses] = useState<Class[]>([]);
   const [groups, setGroups] = useState<StudentGroup[]>([]);
   const [allStudents, setAllStudents] = useState<{_id: string, name: string, email: string}[]>([]);
@@ -381,61 +381,54 @@ export function Dashboard() {
   const [modalTarget, setModalTarget] = useState<{ type: "class" | "group"; id: string } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Fetch classes, tasks, and groups on mount
-  useEffect(() => {
+  const fetchAll = async () => {
     const userId = localStorage.getItem("userId");
+    if (!userId) return;
 
-    if (!userId) {
-      console.warn("No userId found");
+    try {
+      const [classRes, groupRes, studentsRes, allClassRes] = await Promise.all([
+        fetch(`/api/classes?userId=${userId}`),
+        fetch(`/api/groups?userId=${userId}`),
+        fetch("/api/users?role=student"),
+        fetch("/api/classes")
+      ]);
+
+      const classData = await classRes.json();
+      const groupData = await groupRes.json();
+      const studentsData = await studentsRes.json();
+      const allClassData = await allClassRes.json();
+
+      const classesWithTasks = await Promise.all(
+        classData.map(async (cls: Class) => {
+          const taskRes = await fetch(`/api/tasks?userId=${userId}&classId=${cls._id}&studyGroupId=null`);
+          return { ...cls, tasks: await taskRes.json() };
+        })
+      );
+
+      const groupsWithTasks = await Promise.all(
+        groupData.map(async (group: StudentGroup) => {
+          const taskRes = await fetch(`/api/tasks?userId=${userId}&studyGroupId=${group._id}`);
+          return { ...group, tasks: await taskRes.json() };
+        })
+      );
+
+      setClasses(classesWithTasks);
+      setGroups(groupsWithTasks);
+      setAllStudents(studentsData);
+      
+      const notEnrolled = allClassData.filter((ac: any) => 
+        !classData.some((ec: any) => ec._id === ac._id)
+      );
+      setAvailableClasses(notEnrolled);
+
+    } catch (error) {
+      console.error("Fetch failed:", error);
+    } finally {
       setLoading(false);
-      return;
     }
+  };
 
-    const fetchAll = async () => {
-      try {
-        const [classRes, groupRes, studentsRes, allClassRes] = await Promise.all([
-          fetch(`/api/classes?userId=${userId}`),
-          fetch(`/api/groups?userId=${userId}`),
-          fetch("/api/users?role=student"),
-          fetch("/api/classes")
-        ]);
-
-        const classData = await classRes.json();
-        const groupData = await groupRes.json();
-        const studentsData = await studentsRes.json();
-        const allClassData = await allClassRes.json();
-
-        const classesWithTasks = await Promise.all(
-          classData.map(async (cls: Class) => {
-            const taskRes = await fetch(`/api/tasks?userId=${userId}&classId=${cls._id}&studyGroupId=null`);
-            return { ...cls, tasks: await taskRes.json() };
-          })
-        );
-
-        setClasses(classesWithTasks);
-
-        const groupsWithTasks = await Promise.all(
-          groupData.map(async (group: StudentGroup) => {
-            const taskRes = await fetch(`/api/tasks?userId=${userId}&studyGroupId=${group._id}`);
-            return { ...group, tasks: await taskRes.json() };
-          })
-        );
-        setGroups(groupsWithTasks);
-        setAllStudents(studentsData);
-        
-        // Filter out classes the student is already in
-        const notEnrolled = allClassData.filter((ac: any) => 
-          !classData.some((ec: any) => ec._id === ac._id)
-        );
-        setAvailableClasses(notEnrolled);
-
-      } catch (error) {
-        console.error("Fetch failed:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchAll();
   }, []);
 
@@ -449,7 +442,7 @@ export function Dashboard() {
 
     if (res.ok) {
       showToast("Successfully enrolled in class!");
-      window.location.reload(); // Simple way to refresh data
+      fetchAll(); // Dynamic update
     } else {
       showToast("Failed to enroll");
     }
@@ -469,9 +462,8 @@ export function Dashboard() {
     });
 
     if (res.ok) {
-      const newGroup = await res.json();
-      setGroups(prev => [...prev, newGroup]);
       showToast("Group created! Now add some members.");
+      fetchAll(); // Dynamic update
     } else {
       showToast("Failed to create group");
     }
@@ -486,47 +478,12 @@ export function Dashboard() {
 
     if (res.ok) {
       showToast("Member added to group!");
-      // Update local state
-      setGroups(prev => prev.map(g => {
-        if (g._id === groupId) {
-          return { ...g, memberIds: [...g.memberIds, userId] };
-        }
-        return g;
-      }));
+      fetchAll(); // Dynamic update
     } else {
       const data = await res.json();
       showToast(data.message || "Failed to add member");
     }
   };
-
-  // Weekly tracking init
-  useEffect(() => {
-    const stored = localStorage.getItem("taskMasterWeekly");
-    const storedBadges = localStorage.getItem("taskMasterBadges");
-    if (storedBadges) setEarnedBadges(JSON.parse(storedBadges));
-
-    if (stored) {
-      const data = JSON.parse(stored);
-      const storedDate = new Date(data.weekStart);
-      const today = new Date();
-      const daysSince = Math.floor((today.getTime() - storedDate.getTime()) / 86400000);
-      const newWeek = daysSince >= 7 || (daysSince > 0 && today.getDay() < storedDate.getDay());
-
-      if (newWeek) {
-        const ws = getWeekStart(today).toISOString();
-        setWeeklyCount(0);
-        setWeekStartDate(ws);
-        localStorage.setItem("taskMasterWeekly", JSON.stringify({ count: 0, weekStart: ws }));
-      } else {
-        setWeeklyCount(data.count);
-        setWeekStartDate(data.weekStart);
-      }
-    } else {
-      const ws = getWeekStart(new Date()).toISOString();
-      setWeekStartDate(ws);
-      localStorage.setItem("taskMasterWeekly", JSON.stringify({ count: 0, weekStart: ws }));
-    }
-  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -549,7 +506,6 @@ export function Dashboard() {
   };
 
   const toggleClassTask = async (classId: string, taskId: string) => {
-    // Optimistic UI update
     setClasses((prev) =>
       prev.map((cls) => {
         if (cls._id !== classId) return cls;
@@ -566,13 +522,10 @@ export function Dashboard() {
         };
       })
     );
-
-    // Sync to backend
     await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
   };
 
   const toggleGroupTask = async (groupId: string, taskId: string) => {
-    // Optimistic UI update
     setGroups((prev) =>
       prev.map((group) => {
         if (group._id !== groupId) return group;
@@ -589,8 +542,6 @@ export function Dashboard() {
         };
       })
     );
-
-    // Sync to backend
     await fetch(`/api/tasks/${taskId}/toggle`, { method: "PATCH" });
   };
 
@@ -610,7 +561,7 @@ export function Dashboard() {
 
     if (res.ok) {
       showToast("Group task created!");
-      window.location.reload();
+      fetchAll(); // Dynamic update
     }
   };
 
@@ -629,14 +580,9 @@ export function Dashboard() {
       }),
     });
 
-    const newTask: Task = await res.json();
-
-    if (modalTarget.type === "class") {
-      setClasses((prev) =>
-        prev.map((c) =>
-          c._id === modalTarget.id ? { ...c, tasks: [...c.tasks, newTask] } : c
-        )
-      );
+    if (res.ok) {
+      showToast("Task added!");
+      fetchAll(); // Dynamic update
     }
   };
 
@@ -645,12 +591,32 @@ export function Dashboard() {
     setModalOpen(true);
   };
 
-  const totalTasks = classes.reduce((a, c) => a + c.tasks.length, 0);
+  // Weekly tracking init
+  useEffect(() => {
+    const stored = localStorage.getItem("taskMasterWeekly");
+    const storedBadges = localStorage.getItem("taskMasterBadges");
+    if (storedBadges) setEarnedBadges(JSON.parse(storedBadges));
 
-  const completedTasks = classes.reduce(
-    (a, c) => a + c.tasks.filter((t) => t.status === "done").length,
-    0
-  );
+    if (stored) {
+      const data = JSON.parse(stored);
+      const ws = getWeekStart(new Date()).toISOString();
+      if (data.weekStart !== ws) {
+        setWeeklyCount(0);
+        setWeekStartDate(ws);
+        localStorage.setItem("taskMasterWeekly", JSON.stringify({ count: 0, weekStart: ws }));
+      } else {
+        setWeeklyCount(data.count);
+        setWeekStartDate(data.weekStart);
+      }
+    } else {
+      const ws = getWeekStart(new Date()).toISOString();
+      setWeekStartDate(ws);
+      localStorage.setItem("taskMasterWeekly", JSON.stringify({ count: 0, weekStart: ws }));
+    }
+  }, []);
+
+  const totalTasks = classes.reduce((a, c) => a + c.tasks.length, 0);
+  const completedTasks = classes.reduce((a, c) => a + c.tasks.filter((t) => t.status === "done").length, 0);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -664,8 +630,6 @@ export function Dashboard() {
   return (
     <div className="dashboard-page">
       <div className="overlay">
-
-        {/* Navbar */}
         <nav className="dashboard-navbar">
           <div className="dashboard-brand">
             <div className="logo" />
@@ -674,22 +638,16 @@ export function Dashboard() {
               <p className="subtitle">Student Dashboard</p>
             </div>
           </div>
-          <div className="button" onClick={handleLogout}>
-            Logout
-          </div>
+          <div className="button" onClick={handleLogout}>Logout</div>
         </nav>
 
-        {/* Scrollable content area */}
         <div className="dashboard-content">
-
-          {/* Top cards: house + badges */}
           <div className="cards-grid">
             <div className="card house-card">
               <h2>Weekly Progress Adventure</h2>
               <div className="subtitle">Complete tasks to add balloons! Resets every Sunday.</div>
               <HouseWithBalloons count={weeklyCount} />
             </div>
-
             <div className="card badge-card">
               <h2>Achievement Badges</h2>
               <div className="subtitle">Earn badges by completing tasks each week!</div>
@@ -697,90 +655,25 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Stats row */}
           <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-card-content">
-                <div className="stat-row">
-                  <div>
-                    <p className="stat-label">Total Classes</p>
-                    <p className="stat-value">{classes.length}</p>
-                  </div>
-                  <div className="stat-icon-box blue">📚</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-card-content">
-                <div className="stat-row">
-                  <div>
-                    <p className="stat-label">Student Groups</p>
-                    <p className="stat-value">{groups.length}</p>
-                  </div>
-                  <div className="stat-icon-box purple">👥</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-card-content">
-                <div className="stat-row">
-                  <div>
-                    <p className="stat-label">Total Tasks</p>
-                    <p className="stat-value">{totalTasks}</p>
-                  </div>
-                  <div className="stat-icon-box green">⏰</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="stat-card">
-              <div className="stat-card-content">
-                <div className="stat-row">
-                  <div>
-                    <p className="stat-label">Completed</p>
-                    <p className="stat-value">{completedTasks}</p>
-                  </div>
-                  <div className="stat-icon-box orange">✅</div>
-                </div>
-              </div>
-            </div>
+            <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Total Classes</p><p className="stat-value">{classes.length}</p></div><div className="stat-icon-box blue">📚</div></div></div></div>
+            <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Student Groups</p><p className="stat-value">{groups.length}</p></div><div className="stat-icon-box purple">👥</div></div></div></div>
+            <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Total Tasks</p><p className="stat-value">{totalTasks}</p></div><div className="stat-icon-box green">⏰</div></div></div></div>
+            <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Completed</p><p className="stat-value">{completedTasks}</p></div><div className="stat-icon-box orange">✅</div></div></div></div>
           </div>
 
-          {/* Tabs */}
           <div className="tabs-container">
             <div className="tabs-header">
-              <button
-                className={`tab-btn ${activeTab === "classes" ? "tab-active" : ""}`}
-                onClick={() => setActiveTab("classes")}
-              >
-                📚 My Classes
-              </button>
-              <button
-                className={`tab-btn ${activeTab === "groups" ? "tab-active" : ""}`}
-                onClick={() => setActiveTab("groups")}
-              >
-                👥 My Groups
-              </button>
-              <button
-                className={`tab-btn ${activeTab === "browse" ? "tab-active" : ""}`}
-                onClick={() => setActiveTab("browse")}
-              >
-                🔍 Browse Classes
-              </button>
+              <button className={`tab-btn ${activeTab === "classes" ? "tab-active" : ""}`} onClick={() => setActiveTab("classes")}>📚 My Classes</button>
+              <button className={`tab-btn ${activeTab === "groups" ? "tab-active" : ""}`} onClick={() => setActiveTab("groups")}>👥 My Groups</button>
+              <button className={`tab-btn ${activeTab === "browse" ? "tab-active" : ""}`} onClick={() => setActiveTab("browse")}>🔍 Browse Classes</button>
             </div>
 
             {activeTab === "classes" && (
               <div className="tab-content-grid">
                 {classes.length === 0 && <p className="empty-msg">You are not enrolled in any classes yet.</p>}
                 {classes.map((cls) => (
-                  <ClassCard
-                    key={cls._id}
-                    cls={cls}
-                    onToggleTask={(taskId) => toggleClassTask(cls._id, taskId)}
-                    onAddTask={() => openModal("class", cls._id)}
-                  />
+                  <ClassCard key={cls._id} cls={cls} onToggleTask={(taskId) => toggleClassTask(cls._id, taskId)} onAddTask={() => openModal("class", cls._id)} />
                 ))}
               </div>
             )}
@@ -789,18 +682,10 @@ export function Dashboard() {
               <div className="tab-content-grid">
                 <div className="content-card create-group-card">
                     <h3>Start a Study Group</h3>
-                    <p>Collaborate with your peers on tasks and projects.</p>
                     <button className="button button-primary" onClick={() => setShowCreateGroup(true)}>Create Group</button>
                 </div>
                 {groups.map((group) => (
-                  <GroupCard
-                    key={group._id}
-                    group={group}
-                    allStudents={allStudents}
-                    onAddMember={handleAddMemberToGroup}
-                    onToggleTask={toggleGroupTask}
-                    onAddTask={handleAddGroupTask}
-                  />
+                  <GroupCard key={group._id} group={group} allStudents={allStudents} onAddMember={handleAddMemberToGroup} onToggleTask={toggleGroupTask} onAddTask={handleAddGroupTask} />
                 ))}
               </div>
             )}
@@ -811,10 +696,7 @@ export function Dashboard() {
                 {availableClasses.map((cls) => (
                   <div key={cls._id} className="content-card">
                      <div className="content-card-header">
-                        <div>
-                           <h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3>
-                           <p className="content-card-meta">{cls.semester}</p>
-                        </div>
+                        <div><h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3><p className="content-card-meta">{cls.semester}</p></div>
                         <button className="button button-primary" onClick={() => handleJoinClass(cls._id)}>Join</button>
                      </div>
                   </div>
@@ -822,24 +704,12 @@ export function Dashboard() {
               </div>
             )}
           </div>
-
         </div>
       </div>
 
-      <AddTaskModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onAdd={handleAddTask}
-      />
-
+      <AddTaskModal open={modalOpen} onClose={() => setModalOpen(false)} onAdd={handleAddTask} />
       {toast && <div className="toast">{toast}</div>}
-
-      <CreateGroupModal
-        open={showCreateGroup}
-        onClose={() => setShowCreateGroup(false)}
-        onAdd={handleCreateGroup}
-        classes={classes}
-      />
+      <CreateGroupModal open={showCreateGroup} onClose={() => setShowCreateGroup(false)} onAdd={handleCreateGroup} classes={classes} />
     </div>
   );
 }
