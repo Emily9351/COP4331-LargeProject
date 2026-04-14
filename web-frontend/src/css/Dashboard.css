@@ -161,10 +161,17 @@ html, body {
   max-width: 100%;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 600px) {
   .cards-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 400px));
     gap: 0.875rem;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 900px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 450px));
   }
 }
 
