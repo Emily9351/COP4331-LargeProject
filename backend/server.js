@@ -407,7 +407,7 @@ app.delete("/api/classes/:id/enroll/:userId", async (req, res) => {
 // Create a group
 app.post("/api/groups", async (req, res) => {
   try {
-    const { name, classId, createdBy, description, isPublic, memberIds } = req.body;
+    const { name, classId, createdBy, description, isPublic, memberIds, allowStudentTasks } = req.body;
  
     if (!name)
       return res.status(400).json({ message: "Group name is required" });
@@ -429,6 +429,7 @@ app.post("/api/groups", async (req, res) => {
       memberIds: memberIds || [],
       description: description || "",
       isPublic: isPublic !== undefined ? isPublic : true,
+      allowStudentTasks: allowStudentTasks !== undefined ? allowStudentTasks : true,
     });
  
     await group.save();
