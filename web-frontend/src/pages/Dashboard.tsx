@@ -499,14 +499,14 @@ export function Dashboard() {
 
       const classesWithTasks = await Promise.all(
         classData.map(async (cls: Class) => {
-          const taskRes = await fetch(`/api/tasks?userId=${userId}&classId=${cls._id}&studyGroupId=null`);
+          const taskRes = await fetch(`/api/tasks?userId=${userId}&classId=${cls._id}&studyGroupId=null&isHidden=all`);
           return { ...cls, tasks: await taskRes.json() };
         })
       );
 
       const groupsWithTasks = await Promise.all(
         groupData.map(async (group: StudentGroup) => {
-          const taskRes = await fetch(`/api/tasks?userId=${userId}&studyGroupId=${group._id}`);
+          const taskRes = await fetch(`/api/tasks?userId=${userId}&studyGroupId=${group._id}&isHidden=all`);
           return { ...group, tasks: await taskRes.json() };
         })
       );
@@ -729,8 +729,12 @@ export function Dashboard() {
     }
   }, []);
 
-  const totalTasks = classes.reduce((a, c) => a + c.tasks.length, 0);
-  const completedTasks = classes.reduce((a, c) => a + c.tasks.filter((t) => t.status === "done").length, 0);
+  const visibleClassTasks = classes.flatMap(c => c.tasks.filter(t => !t.isHidden));
+  const visibleGroupTasks = groups.flatMap(g => g.tasks?.filter(t => !t.isHidden) || []);
+  const allVisibleTasks = [...visibleClassTasks, ...visibleGroupTasks];
+
+  const totalTasksCount = allVisibleTasks.length;
+  const completedTasksCount = allVisibleTasks.filter((t) => t.status === "done").length;
 
   const handleLogout = () => {
     localStorage.clear();
@@ -775,8 +779,8 @@ export function Dashboard() {
           <div className="stats-grid">
             <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Total Classes</p><p className="stat-value">{classes.length}</p></div><div className="stat-icon-box blue">📚</div></div></div></div>
             <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Student Groups</p><p className="stat-value">{groups.length}</p></div><div className="stat-icon-box purple">👥</div></div></div></div>
-            <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Total Tasks</p><p className="stat-value">{totalTasks}</p></div><div className="stat-icon-box green">⏰</div></div></div></div>
-            <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Completed</p><p className="stat-value">{completedTasks}</p></div><div className="stat-icon-box orange">✅</div></div></div></div>
+            <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Total Tasks</p><p className="stat-value">{totalTasksCount}</p></div><div className="stat-icon-box green">⏰</div></div></div></div>
+            <div className="stat-card"><div className="stat-card-content"><div className="stat-row"><div><p className="stat-label">Completed</p><p className="stat-value">{completedTasksCount}</p></div><div className="stat-icon-box orange">✅</div></div></div></div>
           </div>
 
           <div className="tabs-container">

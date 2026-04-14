@@ -740,8 +740,10 @@ app.get("/api/tasks", async (req, res) => {
       filter.isMaster = true;
     }
     
-    // Filter by isHidden (default to false if not specified)
-    if (req.query.isHidden !== undefined) {
+    // Filter by isHidden
+    if (req.query.isHidden === 'all') {
+      // Don't add isHidden to filter, fetch all
+    } else if (req.query.isHidden !== undefined) {
       filter.isHidden = req.query.isHidden === 'true';
     } else {
       filter.isHidden = false;
@@ -829,11 +831,20 @@ app.patch("/api/tasks/:id/toggle-hide", async (req, res) => {
 // Delete a task
 app.delete("/api/tasks/:id", async (req, res) => {
   try {
-    const task = await Task.findByIdAndDelete(req.params.id);
- 
-    if (!task)
-      return res.status(404).json({ message: "Task not found" });
- 
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    // If deleting a master task, delete all student copies
+    if (task.isMaster) {
+      await Task.deleteMany({
+        title: task.title,
+        classId: task.classId,
+        studyGroupId: task.studyGroupId,
+        isMaster: false
+      });
+    }
+
+    await Task.findByIdAndDelete(req.params.id);
     res.json({ message: "Task deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

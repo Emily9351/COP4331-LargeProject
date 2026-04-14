@@ -30,6 +30,12 @@ const UserSchema = new mongoose.Schema(
         ref: "Class",
       },
     ],
+    hiddenClasses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Class",
+      },
+    ],
     profilePictureUrl: {
       type: String,
       default: "",
