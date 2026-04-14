@@ -214,6 +214,7 @@ html, body {
   border-color: #1e3a8a;
   display: flex;
   flex-direction: column;
+  height: -webkit-fill-available;
 }
 
 /* Badge card */
