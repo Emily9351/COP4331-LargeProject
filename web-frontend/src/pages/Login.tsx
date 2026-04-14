@@ -39,10 +39,9 @@ export function Login() {
 
             if (data.role === "professor") {
                 navigate("/professor-dashboard");
-            } else if (data.role === "student") {
-                navigate("/student-dashboard");
             } else {
-                navigate("/dashboard"); 
+                // Students and any other roles go to the main dashboard
+                navigate("/dashboard");
             }
 
         } catch (err) {
