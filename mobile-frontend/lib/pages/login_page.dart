@@ -51,6 +51,7 @@ class _LoginPageState extends State<LoginPage> {
         // Save the ID locally
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userId', uid);
+        await prefs.setString('authToken', data['token']?.toString() ?? '');
 
         // Navigate to Dashboard
         if (mounted) {

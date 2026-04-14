@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import UpIcon from "../assets/UpIcon.png";
 import "../css/Login.css";
+import { setAuthSession } from "../lib/auth";
 
 export function Login() {
     const navigate = useNavigate();
@@ -30,9 +31,12 @@ export function Login() {
 
             const data = await response.json();
 
-            localStorage.setItem("userId", data.userId); 
-            localStorage.setItem("role", data.role);
-            localStorage.setItem("name", data.name); 
+            setAuthSession(data.token, {
+                userId: data.userId,
+                role: data.role,
+                name: data.name,
+                email: data.user?.email,
+            });
 
             console.log("Login successful", data);
             console.log("LOGIN DATA:", data);

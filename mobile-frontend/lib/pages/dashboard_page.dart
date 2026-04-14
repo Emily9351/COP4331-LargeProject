@@ -105,19 +105,22 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _fetchDatabaseStatus() async {
     final prefs  = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId') ?? '';
+    final authToken = prefs.getString('authToken') ?? '';
 
-    if (userId.isEmpty) {
+    if (userId.isEmpty || authToken.isEmpty) {
       setState(() => _loading = false);
       return;
     }
 
+    final headers = {'Authorization': 'Bearer $authToken'};
+
     try {
       // 1. Fetch all classes
-      final classRes = await http.get(Uri.parse('$_baseUrl/api/classes'));
+      final classRes = await http.get(Uri.parse('$_baseUrl/api/classes'), headers: headers);
       final classData = jsonDecode(classRes.body) as List;
 
       // 2. Filter to this student's enrolled classes
-      final userRes  = await http.get(Uri.parse('$_baseUrl/api/users/$userId'));
+      final userRes  = await http.get(Uri.parse('$_baseUrl/api/users/$userId'), headers: headers);
       final userData = jsonDecode(userRes.body);
       final enrolledIds = List<String>.from(
         (userData['enrolledClasses'] ?? []).map((c) => c is Map ? c['_id'] : c),
@@ -132,13 +135,14 @@ class _DashboardPageState extends State<DashboardPage> {
       for (final cls in myClasses) {
         final taskRes  = await http.get(
           Uri.parse('$_baseUrl/api/tasks?classId=${cls.id}'),
+          headers: headers,
         );
         final taskData = jsonDecode(taskRes.body) as List;
         cls.tasks      = taskData.map((t) => TaskModel.fromJson(t)).toList();
       }
 
       // 4. Fetch user's groups
-      final groupRes  = await http.get(Uri.parse('$_baseUrl/api/groups'));
+      final groupRes  = await http.get(Uri.parse('$_baseUrl/api/groups'), headers: headers);
       final groupData = jsonDecode(groupRes.body) as List;
       final myGroups  = groupData
           .where((g) => (g['memberIds'] as List).contains(userId))
