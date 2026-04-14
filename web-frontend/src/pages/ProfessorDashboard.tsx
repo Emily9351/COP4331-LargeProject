@@ -163,33 +163,34 @@ type Student = {
     /* ================= CLASS ACTIONS ================= */
 
     const createClass = async () => {
-        if (!newClassName) return;
+    if (!newClassName) return;
 
-        const res = await fetch("/api/classes/create", {
+    const res = await fetch("/api/classes", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: newClassName }),
-        });
+        body: JSON.stringify({
+            title: newClassName,
+            courseCode: "GEN101",
+            semester: "Fall",
+            section: "001",
+            professorId: localStorage.getItem("userId"), // OR decode token properly
+        }),
+    });
 
-        if (res.ok) {
-        toast.success("Class created");
-        setNewClassName("");
-        fetchClasses();
-        }
-    };
+    const data = await res.json();
 
-    const deleteClass = async (classId: string) => {
-        await fetch(`/api/classes/${classId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-        });
+    if (!res.ok) {
+        toast.error(data.message || "Failed to create class");
+        return;
+    }
 
-        toast.success("Class deleted");
-        fetchClasses();
-    };
+    toast.success("Class created");
+    setNewClassName("");
+    fetchClasses();
+};
 
     /* ================= GROUP ================= */
 

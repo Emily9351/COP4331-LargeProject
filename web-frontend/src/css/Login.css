@@ -110,6 +110,8 @@ html, body {
     outline: none;
     color: black;
     background-color: white;
+    align-items: center;
+    display: flex;
 }
 
 .input-wrapper input:focus {
