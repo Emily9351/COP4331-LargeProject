@@ -22,8 +22,8 @@
 }
 
 .dropdown-trigger:hover {
-    background: #f7fafc;
-    border-color: #2563eb;
+    background: #ffc107;
+    border-color: #1e3a8a;
 }
 
 /* Selected value layout */
@@ -36,7 +36,7 @@
 
 /* Placeholder text */
 .placeholder {
-    color: #718096;
+    color: #4a5568;
     font-size: 14px;
 }
 
@@ -52,13 +52,13 @@
 
 .student-username {
     font-size: 12px;
-    color: #718096;
+    color: #4a5568;
 }
 
 /* Chevron icon animation */
 .dropdown-icon {
     transition: transform 0.2s ease;
-    color: #718096;
+    color: #4a5568;
 }
 
 .dropdown-icon.open {
@@ -75,10 +75,10 @@
     background: #ffffff;
     border-radius: 10px;
     margin-top: 6px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     z-index: 100;
     overflow: hidden;
-    border: 1px solid #cbd5e0;
+    border: 1px solid #718096;
 }
 
 /* ================= SEARCH INPUT ================= */
@@ -88,8 +88,8 @@
     align-items: center;
     gap: 8px;
     padding: 10px;
-    border-bottom: 1px solid #cbd5e0;
-    background: #f7fafc;
+    border-bottom: 1px solid #718096;
+    background: #ffc107;
 }
 
 .dropdown-search input {
@@ -102,7 +102,7 @@
 }
 
 .dropdown-search input::placeholder {
-    color: #718096;
+    color: #4a5568;
 }
 
 /* ================= LIST ================= */
@@ -114,7 +114,7 @@
 
 /* Scrollbar styling */
 .dropdown-list::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
+    background: #718096;
     border-radius: 10px;
 }
 
@@ -135,11 +135,11 @@
 }
 
 .dropdown-item:hover {
-    background: #f7fafc;
+    background: #ffc107;
 }
 
 .dropdown-item.selected {
-    background: #2563eb;
+    background: #1e3a8a;
     color: white;
 }
 
@@ -156,7 +156,7 @@
 
 .student-username-small {
     font-size: 12px;
-    color: #718096;
+    color: #4a5568;
 }
 
 /* ================= STATES ================= */
@@ -164,7 +164,7 @@
 .dropdown-loading,
 .dropdown-empty {
     padding: 12px;
-    color: #718096;
+    color: #4a5568;
     text-align: center;
     font-size: 14px;
 }

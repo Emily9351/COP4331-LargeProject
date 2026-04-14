@@ -3,7 +3,7 @@
 .dashboard-page {
     min-height: 100vh;
     width: 100%;
-    background: #fffef7;
+    background: #ffd700;
     color: #1a202c;
     font-family: Arial, Helvetica, sans-serif;
     background-image: url('../assets/UpBackground.png');
@@ -14,7 +14,7 @@
 .overlay {
     min-height: 100vh;
     padding: 20px;
-    background: rgba(26, 32, 44, 0.6);
+    background: rgba(30, 58, 138, 0.3);
 }
 
 /* ================= NAVBAR ================= */
@@ -24,11 +24,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    background: #fffef7;
+    background: #ffffff;
     border-radius: 12px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    border: 1px solid #cbd5e0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid #718096;
 }
 
 .dashboard-brand {
@@ -41,7 +41,7 @@
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
 }
 
 .name {
@@ -52,7 +52,7 @@
 
 .subtitle {
     font-size: 12px;
-    color: #4a5568;
+    color: #2d3748;
 }
 
 /* ================= BUTTONS ================= */
@@ -60,7 +60,7 @@
 .button {
     background: #ffffff;
     color: #111;
-    border: 1px solid #cbd5e0;
+    border: 1px solid #718096;
     padding: 8px 12px;
     border-radius: 8px;
     cursor: pointer;
@@ -72,17 +72,17 @@
 }
 
 .button:hover {
-    background: #f7fafc;
+    background: #ffc107;
 }
 
 .button-primary {
-    background: #2563eb;
+    background: #1e3a8a;
     color: white;
     border: none;
 }
 
 .button-primary:hover {
-    background: #1d4ed8;
+    background: #1e40af;
 }
 
 /* ================= CARDS ================= */
@@ -93,17 +93,17 @@
 }
 
 .card {
-    background: #fffef7;
+    background: #ffffff;
     padding: 20px;
     border-radius: 14px;
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
-    border: 1px solid #cbd5e0;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+    border: 1px solid #718096;
 }
 
 .house-card, .badge-card {
     max-width: 80vw;
     margin: auto;
-    background-color: #fef9e7;
+    background-color: #ffc107;
 }
 
 .content-card {
@@ -111,7 +111,7 @@
     padding: 14px;
     border-radius: 10px;
     margin-top: 10px;
-    border: 1px solid #cbd5e0;
+    border: 1px solid #718096;
 }
 
 .content-card-header {
@@ -137,7 +137,7 @@ input, select, textarea {
     padding: 10px;
     margin-top: 10px;
     border-radius: 8px;
-    border: 1px solid #cbd5e0;
+    border: 1px solid #718096;
     background: #ffffff;
     color: #111;
     outline: none;
@@ -145,7 +145,7 @@ input, select, textarea {
 }
 
 input:focus, select:focus, textarea:focus {
-    border-color: #2563eb;
+    border-color: #1e3a8a;
 }
 
 /* ================= TASK / LIST ITEMS ================= */

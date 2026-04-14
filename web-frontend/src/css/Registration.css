@@ -13,18 +13,18 @@
 .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(26, 32, 44, 0.6);
+    background: rgba(30, 58, 138, 0.3);
 }
 
 .registration-card {
     width: 100%;
     max-width: 25em;
-    background: rgba(255, 254, 247, 0.95);
-    border: 2px solid rgba(203, 213, 224, 0.8);
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #718096;
     backdrop-filter: blur(8px);
     border-radius: 12px;
     padding: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     position: relative;
     z-index: 1;
 }
@@ -38,7 +38,7 @@
     width: 64px;
     height: 64px;
     margin: 0 auto 10px;
-    background: linear-gradient(to bottom right, #2563eb, #4f46e5);
+    background: linear-gradient(to bottom right, #1e3a8a, #1e40af);
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -59,7 +59,7 @@
 }
 
 .registration-header p {
-    color: #4a5568;
+    color: #2d3748;
     font-size: 16px;
     font-weight: 600;
 }
@@ -87,13 +87,13 @@
     top: 10px;
     width: 16px;
     height: 16px;
-    color: #718096;
+    color: #4a5568;
 }
 
 .input-wrapper input {
     width: 100%;
     padding: 10px 10px 10px 34px;
-    border: 1px solid #cbd5e0;
+    border: 1px solid #718096;
     border-radius: 6px;
     outline: none;
     color: #1a202c;
@@ -101,8 +101,8 @@
 }
 
 .input-wrapper input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2);
 }
 
 .registration-button {
@@ -110,7 +110,7 @@
     border: none;
     border-radius: 6px;
     color: white;
-    background: linear-gradient(to right, #2563eb, #1d4ed8);
+    background: linear-gradient(to right, #1e3a8a, #1e40af);
     cursor: pointer;
     transition: 0.3s;
     margin-top: 10px;
@@ -118,9 +118,9 @@
 }
 
 .registration-button:hover {
-    background: linear-gradient(to right, #1d4ed8, #1e40af);
+    background: linear-gradient(to right, #1e40af, #1d4ed8);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.4);
 }
 
 .footer-text {
@@ -128,11 +128,11 @@
     text-align: center;
     font-size: 14px;
     margin-top: 10px;
-    color: #4a5568;
+    color: #2d3748;
 }
 
 .footer-text a {
-    color: #2563eb;
+    color: #1e3a8a;
     text-decoration: none;
     font-weight: 600;
 
