@@ -39,8 +39,6 @@ export function Login() {
 
             if (data.role === "professor") {
                 navigate("/professor-dashboard");
-            } else if (data.role === "student") {
-                navigate("/student-dashboard");
             } else {
                 navigate("/dashboard"); 
             }
