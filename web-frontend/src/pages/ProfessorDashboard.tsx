@@ -51,37 +51,25 @@ export function ProfessorDashboard() {
     // Get these from localStorage — make sure login stores them!
     const userId = localStorage.getItem("userId");
 
-    /* ===== FETCH ALL CLASSES (filter by professorId client-side) ===== */
+    /* ===== FETCH ALL CLASSES (using professorId filter) ===== */
     const fetchClasses = async () => {
-        const res = await fetch("/api/classes");
+        const res = await fetch(`/api/classes?professorId=${userId}`);
         const data = await res.json();
         if (res.ok) {
-            // Filter to only this professor's classes
-            const mine = data.filter((c: any) => c.professorId?._id === userId || c.professorId === userId);
-            setClasses(mine);
+            setClasses(data);
         } else {
             toast.error("Failed to load classes");
         }
     };
 
-    /* ===== FETCH ALL STUDENTS ===== */
+    /* ===== FETCH ALL STUDENTS (using new /api/users endpoint) ===== */
     const fetchStudents = async () => {
-        // Backend has no GET /api/users — we fetch from classes we know about
-        // Workaround: collect students already in our classes
-        const res = await fetch("/api/classes");
+        const res = await fetch("/api/users?role=student");
         const data = await res.json();
         if (res.ok) {
-            const allStudents: User[] = [];
-            const seen = new Set();
-            data.forEach((c: any) => {
-                (c.studentIds || []).forEach((s: User) => {
-                    if (!seen.has(s._id)) {
-                        seen.add(s._id);
-                        allStudents.push(s);
-                    }
-                });
-            });
-            setStudents(allStudents);
+            setStudents(data);
+        } else {
+            toast.error("Failed to load students");
         }
     };
 
