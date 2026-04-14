@@ -667,7 +667,7 @@ html, body {
 }
 
 .modal-box {
-  background: #ffc107;
+  background: rgb(241, 255, 166);
   border-radius: 12px;
   padding: 1.25rem;
   width: 90%;
@@ -702,7 +702,7 @@ html, body {
   border-radius: 8px;
   font-size: 0.875rem;
   color: #1a202c;
-  background: #ffc107;
+  background: rgb(241, 255, 166);
   outline: none;
   box-sizing: border-box;
   transition: all 0.2s ease;
@@ -744,7 +744,7 @@ html, body {
 .badge-card header {
   text-align: center;
   padding: 1.25rem 1.25rem 0.75rem;
-  background: #ffc107;
+  background: rgb(241, 255, 166);
 }
 
 .badge-card h2 {
