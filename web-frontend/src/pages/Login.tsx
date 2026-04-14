@@ -60,7 +60,7 @@ export function Login() {
             <div className="login-card">
                 <div className="login-header">
                     <div className="icon-box">
-                        <img src={UpIcon} alt="Up Icon" className="icon" />
+                        <img src={UpIcon} alt="Up Icon" className="icon" width="100" height="100" loading="lazy" decoding="async" />
                     </div>
                     <h1>Adventure Awaits</h1>
                     <p>Reach New Heights One Task at a Time</p>
