@@ -354,7 +354,7 @@ html, body {
 }
 
 .stat-card {
-  background-color: #ffc107;
+  background-color: rgb(241, 255, 166);
   border: 2px solid #1e3a8a;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2);
@@ -416,7 +416,7 @@ html, body {
 .stat-icon-box.blue   { background-color: #bfdbfe; }
 .stat-icon-box.purple { background-color: #bfdbfe; }
 .stat-icon-box.green  { background-color: #a0aec0; }
-.stat-icon-box.orange { background-color: #ffc107; }
+.stat-icon-box.orange { background-color: rgb(241, 255, 166); }
 
 /* ── Tabs ── */
 .tabs-container {
