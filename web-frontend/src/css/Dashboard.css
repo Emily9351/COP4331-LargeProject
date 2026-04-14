@@ -597,7 +597,7 @@ html, body {
   padding: 0.5rem 0.75rem;
   cursor: pointer;
   transition: all 0.15s ease;
-  background: rgb(241, 255, 166);
+  background: #A6C1D3;
   border-bottom: 1px solid #1e3a8a;
 }
 
