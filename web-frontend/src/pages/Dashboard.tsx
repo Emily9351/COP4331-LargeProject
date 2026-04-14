@@ -237,8 +237,10 @@ export function Dashboard() {
   // const navigate = useNavigate();
   const [classes, setClasses] = useState<Class[]>([]);
   const [groups, setGroups] = useState<StudentGroup[]>([]);
+  const [allStudents, setAllStudents] = useState<{_id: string, name: string, email: string}[]>([]);
+  const [availableClasses, setAvailableClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"classes" | "groups">("classes");
+  const [activeTab, setActiveTab] = useState<"classes" | "groups" | "browse">("classes");
   const [weeklyCount, setWeeklyCount] = useState(0);
   const [weekStartDate, setWeekStartDate] = useState("");
   const [earnedBadges, setEarnedBadges] = useState<BadgeType[]>([]);
@@ -258,8 +260,17 @@ export function Dashboard() {
 
     const fetchAll = async () => {
       try {
-        const classRes = await fetch(`/api/classes?userId=${userId}`);
+        const [classRes, groupRes, studentsRes, allClassRes] = await Promise.all([
+          fetch(`/api/classes?userId=${userId}`),
+          fetch(`/api/groups?userId=${userId}`),
+          fetch("/api/users?role=student"),
+          fetch("/api/classes")
+        ]);
+
         const classData = await classRes.json();
+        const groupData = await groupRes.json();
+        const studentsData = await studentsRes.json();
+        const allClassData = await allClassRes.json();
 
         const classesWithTasks = await Promise.all(
           classData.map(async (cls: Class) => {
@@ -269,10 +280,14 @@ export function Dashboard() {
         );
 
         setClasses(classesWithTasks);
-
-        const groupRes = await fetch(`/api/groups?userId=${userId}`);
-        const groupData = await groupRes.json();
         setGroups(groupData);
+        setAllStudents(studentsData);
+        
+        // Filter out classes the student is already in
+        const notEnrolled = allClassData.filter((ac: any) => 
+          !classData.some((ec: any) => ec._id === ac._id)
+        );
+        setAvailableClasses(notEnrolled);
 
       } catch (error) {
         console.error("Fetch failed:", error);
@@ -283,6 +298,22 @@ export function Dashboard() {
 
     fetchAll();
   }, []);
+
+  const handleJoinClass = async (classId: string) => {
+    const userId = localStorage.getItem("userId");
+    const res = await fetch(`/api/classes/${classId}/enroll`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (res.ok) {
+      showToast("Successfully enrolled in class!");
+      window.location.reload(); // Simple way to refresh data
+    } else {
+      showToast("Failed to enroll");
+    }
+  };
 
   // Weekly tracking init
   useEffect(() => {

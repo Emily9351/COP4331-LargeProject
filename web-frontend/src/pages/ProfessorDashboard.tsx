@@ -34,7 +34,7 @@ export function ProfessorDashboard() {
     const [classes, setClasses] = useState<Class[]>([]);
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
     const [groups, setGroups] = useState<Group[]>([]);
-    const [_students, setStudents] = useState<User[]>([]);
+    const [students, setStudents] = useState<User[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
 
     const [newCourseCode, setNewCourseCode] = useState("");
@@ -296,12 +296,18 @@ export function ProfessorDashboard() {
                             ))}
 
                             <div className="content-card">
-                                <h4>Enroll Student by ID</h4>
-                                <input
-                                    value={selectedStudentId}
+                                <h4>Enroll Student</h4>
+                                <select 
+                                    className="input"
+                                    value={selectedStudentId} 
                                     onChange={(e) => setSelectedStudentId(e.target.value)}
-                                    placeholder="Paste student user ID"
-                                />
+                                    style={{ width: '100%', padding: '8px', marginBottom: '10px', borderRadius: '4px', background: '#1e293b', color: 'white', border: '1px solid #334155' }}
+                                >
+                                    <option value="">Select a student...</option>
+                                    {students.map(s => (
+                                        <option key={s._id} value={s._id}>{s.name} ({s.email})</option>
+                                    ))}
+                                </select>
                                 <button className="button button-primary" onClick={addStudent}>
                                     Enroll
                                 </button>
@@ -349,12 +355,23 @@ export function ProfessorDashboard() {
                                     {(g.memberIds || []).map((m) => (
                                         <div key={m._id} className="task-item">{m.name}</div>
                                     ))}
-                                    <input
-                                        placeholder="Paste student user ID to add"
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") addToGroup(g._id, (e.target as HTMLInputElement).value);
-                                        }}
-                                    />
+                                    <div style={{ marginTop: '10px' }}>
+                                        <select 
+                                            className="input"
+                                            style={{ width: '100%', padding: '8px', borderRadius: '4px', background: '#1e293b', color: 'white', border: '1px solid #334155' }}
+                                            onChange={(e) => {
+                                                if (e.target.value) {
+                                                    addToGroup(g._id, e.target.value);
+                                                    e.target.value = ""; // reset
+                                                }
+                                            }}
+                                        >
+                                            <option value="">Add member by name...</option>
+                                            {students.map(s => (
+                                                <option key={s._id} value={s._id}>{s.name} ({s.email})</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
                             ))}
                         </div>
