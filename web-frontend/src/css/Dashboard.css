@@ -472,8 +472,8 @@ html, body {
 .content-card {
   background: #ffffff;
   border: 2px solid #718096;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
@@ -483,14 +483,14 @@ html, body {
 
 .content-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.18);
 }
 
 .content-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem 0.75rem;
+  padding: 0.875rem 1rem 0.625rem;
   border-bottom: 2px solid #e2e8f0;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -498,27 +498,27 @@ html, body {
 
 @media (min-width: 768px) {
   .content-card-header {
-    padding: 1.25rem 1.5rem 1rem;
+    padding: 1rem 1.25rem 0.75rem;
     flex-wrap: nowrap;
   }
 }
 
 .content-card-title {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  margin: 0 0 4px;
+  margin: 0 0 3px;
   color: #1a202c;
   word-break: break-word;
 }
 
 @media (min-width: 768px) {
   .content-card-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 }
 
 .content-card-meta {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: #4a5568;
   font-weight: 500;
 }
