@@ -527,18 +527,25 @@ export function Dashboard() {
                 className={`tab-btn ${activeTab === "classes" ? "tab-active" : ""}`}
                 onClick={() => setActiveTab("classes")}
               >
-                📚 Classes
+                📚 My Classes
               </button>
               <button
                 className={`tab-btn ${activeTab === "groups" ? "tab-active" : ""}`}
                 onClick={() => setActiveTab("groups")}
               >
-                👥 Student Groups
+                👥 My Groups
+              </button>
+              <button
+                className={`tab-btn ${activeTab === "browse" ? "tab-active" : ""}`}
+                onClick={() => setActiveTab("browse")}
+              >
+                🔍 Browse Classes
               </button>
             </div>
 
             {activeTab === "classes" && (
               <div className="tab-content-grid">
+                {classes.length === 0 && <p className="empty-msg">You are not enrolled in any classes yet.</p>}
                 {classes.map((cls) => (
                   <ClassCard
                     key={cls._id}
@@ -552,11 +559,34 @@ export function Dashboard() {
 
             {activeTab === "groups" && (
               <div className="tab-content-grid">
+                <div className="content-card create-group-card">
+                   <h3>Start a Study Group</h3>
+                   <p>Collaborate with your peers on tasks and projects.</p>
+                   <button className="button button-primary" onClick={() => setShowCreateGroup(true)}>Create Group</button>
+                </div>
                 {groups.map((group) => (
                   <GroupCard
                     key={group._id}
                     group={group}
+                    allStudents={allStudents}
                   />
+                ))}
+              </div>
+            )}
+
+            {activeTab === "browse" && (
+              <div className="tab-content-grid">
+                {availableClasses.length === 0 && <p className="empty-msg">No new classes available to join.</p>}
+                {availableClasses.map((cls) => (
+                  <div key={cls._id} className="content-card">
+                     <div className="content-card-header">
+                        <div>
+                           <h3 className="content-card-title">{cls.courseCode} — {cls.title}</h3>
+                           <p className="content-card-meta">{cls.semester}</p>
+                        </div>
+                        <button className="button button-primary" onClick={() => handleJoinClass(cls._id)}>Join</button>
+                     </div>
+                  </div>
                 ))}
               </div>
             )}
