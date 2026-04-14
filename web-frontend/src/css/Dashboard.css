@@ -3,6 +3,7 @@ html, body {
   padding: 0;
   height: 100%;
   width: 100%;
+  overflow-x: hidden;
 }
 
 /* ── Page shell ── */
@@ -16,6 +17,7 @@ html, body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  overflow-x: hidden;
 }
 
 .overlay {
@@ -26,6 +28,8 @@ html, body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* ── Navbar ── */
@@ -33,7 +37,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2.5rem;
+  padding: 1rem 1.5rem;
   background-color: #ffffff;
   border-bottom: 2px solid #718096;
   flex-shrink: 0;
@@ -41,6 +45,14 @@ html, body {
   top: 0;
   z-index: 10;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .dashboard-navbar {
+    padding: 0.75rem 1rem;
+  }
 }
 
 .dashboard-brand {
@@ -75,10 +87,26 @@ html, body {
 .dashboard-content {
   flex: 1;
   overflow-y: auto;
-  padding: 2rem 2.5rem 3rem;
+  overflow-x: hidden;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .dashboard-content {
+    padding: 2rem 2rem 3rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .dashboard-content {
+    padding: 2rem 3rem 3rem;
+  }
 }
 
 /* ── Shared button ── */
@@ -123,12 +151,15 @@ html, body {
 .cards-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .cards-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 2rem;
   }
 }
 
@@ -136,8 +167,17 @@ html, body {
     background: #ffffff;
     border: 1px solid #718096;
     border-radius: 14px;
-    padding: 20px;
+    padding: 1.25rem;
     box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 1.5rem;
+  }
 }
 
 .card h2 {
@@ -268,13 +308,16 @@ html, body {
 /* ── Stats grid ── */
 .stats-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 640px) {
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
   }
 }
 
@@ -285,6 +328,9 @@ html, body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .stat-card:hover {
@@ -293,7 +339,13 @@ html, body {
 }
 
 .stat-card-content {
-  padding: 1.5rem 1.75rem;
+  padding: 1rem 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .stat-card-content {
+    padding: 1.5rem 1.75rem;
+  }
 }
 
 .stat-row {
@@ -342,25 +394,44 @@ html, body {
 
 .tabs-header {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   background: rgba(255, 255, 255, 0.98);
   border-radius: 12px;
   padding: 6px;
   width: fit-content;
+  max-width: 100%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border: 2px solid #718096;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+}
+
+@media (min-width: 768px) {
+  .tabs-header {
+    gap: 0.75rem;
+    overflow-x: visible;
+  }
 }
 
 .tab-btn {
-  padding: 0.65rem 1.5rem;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 8px;
   background: transparent;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #4b5563;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .tab-btn {
+    padding: 0.65rem 1.5rem;
+    font-size: 0.95rem;
+  }
 }
 
 .tab-btn:hover {
@@ -378,17 +449,19 @@ html, body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
 }
 
 @media (min-width: 768px) {
   .tab-content-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1400px) {
   .tab-content-grid {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -400,6 +473,9 @@ html, body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .content-card:hover {
@@ -411,16 +487,31 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 1.5rem 1rem;
+  padding: 1rem 1.25rem 0.75rem;
   border-bottom: 2px solid #e2e8f0;
-  padding-left: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .content-card-header {
+    padding: 1.25rem 1.5rem 1rem;
+    flex-wrap: nowrap;
+  }
 }
 
 .content-card-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   margin: 0 0 4px;
   color: #1a202c;
+  word-break: break-word;
+}
+
+@media (min-width: 768px) {
+  .content-card-title {
+    font-size: 1.1rem;
+  }
 }
 
 .content-card-meta {
@@ -530,13 +621,14 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 1rem;
+  overflow-y: auto;
 }
 
 .modal-box {
   background: #ffffff;
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem;
   width: 90%;
   max-width: 420px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
@@ -544,6 +636,15 @@ html, body {
   flex-direction: column;
   gap: 1.25rem;
   border: 2px solid #718096;
+  box-sizing: border-box;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .modal-box {
+    padding: 2rem;
+  }
 }
 
 .modal-title {
