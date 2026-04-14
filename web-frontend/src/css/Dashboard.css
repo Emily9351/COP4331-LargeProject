@@ -430,7 +430,7 @@ html, body {
 .tabs-header {
   display: flex;
   gap: 0.375rem;
-  background: #ffc107;
+  background: rgb(241, 255, 166);
   border-radius: 6px;
   padding: 3px;
   width: fit-content;
@@ -469,13 +469,13 @@ html, body {
 }
 
 .tab-btn:hover {
-  background: #ffc107;
+  background: rgb(241, 255, 166);
   color: #1e3a8a;
 }
 
 .tab-active {
   background: #1e3a8a !important;
-  color: #ffc107 !important;
+  color: rgb(241, 255, 166) !important;
   box-shadow: 0 2px 4px rgba(30, 58, 138, 0.25);
 }
 
@@ -507,7 +507,7 @@ html, body {
 
 /* ── Content cards (class/group) ── */
 .content-card {
-  background: #ffc107;
+  background: rgb(241, 255, 166);
   border: 2px solid #1e3a8a;
   border-radius: 10px;
   box-shadow: 0 3px 10px rgba(30, 58, 138, 0.2);
@@ -565,7 +565,7 @@ html, body {
   height: 24px;
   border-radius: 50%;
   border: 2px solid #1e3a8a;
-  background: #ffc107;
+  background: rgb(241, 255, 166);
   font-size: 0.875rem;
   line-height: 1;
   color: #1e3a8a;
@@ -580,7 +580,7 @@ html, body {
 
 .add-task-btn:hover {
   background: #1e3a8a;
-  color: #ffc107;
+  color: rgb(241, 255, 166);
   border-color: #1e3a8a;
   transform: rotate(90deg);
 }
@@ -597,7 +597,7 @@ html, body {
   padding: 0.5rem 0.75rem;
   cursor: pointer;
   transition: all 0.15s ease;
-  background: #ffc107;
+  background: rgb(241, 255, 166);
   border-bottom: 1px solid #1e3a8a;
 }
 
@@ -606,7 +606,7 @@ html, body {
 }
 
 .task-item:hover {
-  background: #ffc107;
+  background: rgb(241, 255, 166);
   padding-left: 1rem;
   border-left: 3px solid #1e3a8a;
 }
