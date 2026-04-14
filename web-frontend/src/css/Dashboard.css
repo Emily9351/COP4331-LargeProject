@@ -88,10 +88,10 @@ html, body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 0.75rem;
   width: 100%;
   box-sizing: border-box;
@@ -99,14 +99,14 @@ html, body {
 
 @media (min-width: 768px) {
   .dashboard-content {
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     gap: 1rem;
   }
 }
 
 @media (min-width: 1200px) {
   .dashboard-content {
-    padding: 1.25rem 1.5rem;
+    padding: 1.25rem 2rem;
     gap: 1rem;
   }
 }
@@ -155,19 +155,25 @@ html, body {
   flex-wrap: wrap;
   gap: 0.75rem;
   width: 100%;
-  max-width: 1200px;
-  justify-content: center;
+  justify-content: space-evenly;
 }
 
 .cards-grid > * {
   flex: 1 1 300px;
-  max-width: 500px;
+  max-width: 600px;
   min-width: 280px;
 }
 
 @media (min-width: 768px) {
   .cards-grid {
     gap: 1rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .cards-grid > * {
+    flex: 1 1 400px;
+    max-width: 700px;
   }
 }
 
@@ -323,13 +329,12 @@ html, body {
   flex-wrap: wrap;
   gap: 0.5rem;
   width: 100%;
-  max-width: 1200px;
-  justify-content: center;
+  justify-content: space-evenly;
 }
 
 .stats-grid > * {
   flex: 1 1 140px;
-  max-width: 220px;
+  max-width: 280px;
   min-width: 140px;
 }
 
@@ -340,7 +345,14 @@ html, body {
   
   .stats-grid > * {
     flex: 1 1 160px;
-    max-width: 200px;
+    max-width: 300px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .stats-grid > * {
+    flex: 1 1 200px;
+    max-width: 350px;
   }
 }
 
@@ -415,7 +427,6 @@ html, body {
   flex-direction: column;
   gap: 0.75rem;
   width: 100%;
-  max-width: 1200px;
   align-items: center;
 }
 
@@ -476,13 +487,12 @@ html, body {
   flex-wrap: wrap;
   gap: 0.75rem;
   width: 100%;
-  max-width: 1200px;
-  justify-content: center;
+  justify-content: space-evenly;
 }
 
 .tab-content-grid > * {
   flex: 1 1 300px;
-  max-width: 500px;
+  max-width: 600px;
   min-width: 280px;
 }
 
@@ -494,8 +504,8 @@ html, body {
 
 @media (min-width: 1200px) {
   .tab-content-grid > * {
-    flex: 1 1 320px;
-    max-width: 380px;
+    flex: 1 1 350px;
+    max-width: 500px;
   }
 }
 
