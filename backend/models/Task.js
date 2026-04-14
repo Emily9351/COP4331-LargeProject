@@ -15,7 +15,16 @@ const TaskSchema = new mongoose.Schema(
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: false, // Changed to false to allow master tasks
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
+    },
+    isMaster: {
+      type: Boolean,
+      default: false,
     },
     classId: {
       type: mongoose.Schema.Types.ObjectId,

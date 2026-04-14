@@ -346,8 +346,28 @@ app.post("/api/classes/:id/enroll", async (req, res) => {
  
     user.enrolledClasses.push(req.params.id);
     await user.save();
+
+    // Assign existing class-wide (master) tasks to the new student
+    const masterTasks = await Task.find({ classId: req.params.id, isMaster: true });
+    const taskPromises = masterTasks.map(master => {
+      return new Task({
+        title: master.title,
+        type: master.type,
+        assignedTo: userId,
+        createdBy: master.createdBy,
+        isMaster: false,
+        dueDate: master.dueDate,
+        linkedEventId: master.linkedEventId,
+        classId: req.params.id,
+        priority: master.priority,
+        status: "todo",
+        notes: master.notes,
+        tags: master.tags,
+      }).save();
+    });
+    await Promise.all(taskPromises);
  
-    res.json({ message: "Student enrolled successfully" });
+    res.json({ message: "Student enrolled successfully and tasks assigned" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -570,20 +590,47 @@ app.post("/api/tasks", async (req, res) => {
     if (!title)
       return res.status(400).json({ message: "Task title is required" });
     
-    const creatorId = userId || assignedTo;
-    const creator = creatorId ? await User.findById(creatorId) : null;
-    const isProfessor = creator && creator.role === "professor";
+    // The 'userId' in the body represents the person MAKING the request (creator)
+    const creatorId = userId;
+    if (!creatorId)
+      return res.status(400).json({ message: "User ID (creator) is required" });
+
+    const creator = await User.findById(creatorId);
+    if (!creator)
+      return res.status(404).json({ message: "Creator not found" });
+
+    const isProfessor = creator.role === "professor";
 
     // If it's a class-wide task created by a professor (no specific assignedTo)
     if (classId && !studyGroupId && !assignedTo && isProfessor) {
       const cls = await Class.findById(classId);
       if (!cls) return res.status(404).json({ message: "Class not found" });
 
+      // Create a MASTER task (no assignedTo)
+      const masterTask = new Task({
+        title,
+        type: type || "assignment",
+        assignedTo: null,
+        createdBy: creatorId,
+        isMaster: true,
+        dueDate: dueDate || null,
+        linkedEventId: linkedEventId || null,
+        classId: classId,
+        priority: priority || "medium",
+        status: "todo",
+        notes: notes || "",
+        tags: tags || [],
+      });
+      await masterTask.save();
+
+      // Create copies for all students currently in the class
       const taskPromises = cls.studentIds.map(studentId => {
         return new Task({
           title,
           type: type || "assignment",
           assignedTo: studentId,
+          createdBy: creatorId,
+          isMaster: false,
           dueDate: dueDate || null,
           linkedEventId: linkedEventId || null,
           classId: classId,
@@ -594,8 +641,8 @@ app.post("/api/tasks", async (req, res) => {
         }).save();
       });
 
-      const tasks = await Promise.all(taskPromises);
-      return res.status(201).json({ message: "Tasks created for all students", count: tasks.length });
+      await Promise.all(taskPromises);
+      return res.status(201).json({ message: "Master task created and distributed to students", masterTask });
     }
 
     // Handle Study Group tasks - Create for all group members if no specific assignee AND created by professor
@@ -603,11 +650,31 @@ app.post("/api/tasks", async (req, res) => {
       const group = await StudyGroup.findById(studyGroupId);
       if (!group) return res.status(404).json({ message: "Study group not found" });
 
+      // Create a MASTER task (no assignedTo)
+      const masterTask = new Task({
+        title,
+        type: type || "assignment",
+        assignedTo: null,
+        createdBy: creatorId,
+        isMaster: true,
+        dueDate: dueDate || null,
+        linkedEventId: linkedEventId || null,
+        classId: classId || group.classId,
+        studyGroupId: studyGroupId,
+        priority: priority || "medium",
+        status: "todo",
+        notes: notes || "",
+        tags: tags || [],
+      });
+      await masterTask.save();
+
       const taskPromises = group.memberIds.map(memberId => {
         return new Task({
           title,
           type: type || "assignment",
           assignedTo: memberId,
+          createdBy: creatorId,
+          isMaster: false,
           dueDate: dueDate || null,
           linkedEventId: linkedEventId || null,
           classId: classId || group.classId,
@@ -619,8 +686,8 @@ app.post("/api/tasks", async (req, res) => {
         }).save();
       });
 
-      const tasks = await Promise.all(taskPromises);
-      return res.status(201).json({ message: "Group tasks created for all members", count: tasks.length });
+      await Promise.all(taskPromises);
+      return res.status(201).json({ message: "Master group task created and distributed", masterTask });
     }
 
     const finalAssignedTo = assignedTo || userId;
@@ -631,6 +698,8 @@ app.post("/api/tasks", async (req, res) => {
       title,
       type: type || "assignment",
       assignedTo: finalAssignedTo,
+      createdBy: creatorId,
+      isMaster: false,
       dueDate: dueDate || null,
       linkedEventId: linkedEventId || null,
       classId: classId || null,
@@ -663,7 +732,13 @@ app.get("/api/tasks", async (req, res) => {
     if (studyGroupId === 'null') filter.studyGroupId = null;
 
     if (status) filter.status = status;
-    if (assignedTo || userId) filter.assignedTo = assignedTo || userId;
+    if (assignedTo || userId) {
+      filter.assignedTo = assignedTo || userId;
+    } else if (classId || studyGroupId) {
+      // If fetching for a class/group but no user specified, 
+      // return only master tasks (to avoid duplicates in professor view)
+      filter.isMaster = true;
+    }
     
     // Filter by isHidden (default to false if not specified)
     if (req.query.isHidden !== undefined) {

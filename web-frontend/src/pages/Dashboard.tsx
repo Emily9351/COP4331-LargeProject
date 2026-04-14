@@ -401,6 +401,68 @@ function CreateGroupModal({
   );
 }
 
+function ArchivedTasksModal({
+  open,
+  onClose,
+  classes,
+  groups,
+  onToggleTask,
+  onToggleGroupTask,
+  onToggleHide,
+}: {
+  open: boolean;
+  onClose: () => void;
+  classes: Class[];
+  groups: StudentGroup[];
+  onToggleTask: (classId: string, taskId: string) => void;
+  onToggleGroupTask: (groupId: string, taskId: string) => void;
+  onToggleHide: (taskId: string) => void;
+}) {
+  if (!open) return null;
+
+  const hiddenClassTasks = classes.flatMap(c => c.tasks.filter(t => t.isHidden).map(t => ({ task: t, classId: c._id })));
+  const hiddenGroupTasks = groups.flatMap(g => g.tasks?.filter(t => t.isHidden).map(t => ({ task: t, groupId: g._id })) || []);
+
+  const hasHidden = hiddenClassTasks.length > 0 || hiddenGroupTasks.length > 0;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
+        <h3 className="modal-title">📦 Archived Tasks</h3>
+        <p className="modal-subtitle" style={{ color: '#94a3b8', marginBottom: '20px' }}>
+          Restore tasks to bring them back to your active list.
+        </p>
+        
+        <div className="task-list" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
+          {!hasHidden && <p className="empty-msg">No archived tasks found.</p>}
+          
+          {hiddenClassTasks.map(({ task, classId }) => (
+            <TaskItem 
+              key={task._id} 
+              task={task} 
+              onToggle={() => onToggleTask(classId, task._id)} 
+              onToggleHide={() => onToggleHide(task._id)} 
+            />
+          ))}
+          
+          {hiddenGroupTasks.map(({ task, groupId }) => (
+            <TaskItem 
+              key={task._id} 
+              task={task} 
+              onToggle={() => onToggleGroupTask(groupId, task._id)} 
+              onToggleHide={() => onToggleHide(task._id)} 
+            />
+          ))}
+        </div>
+
+        <div className="modal-actions" style={{ marginTop: '20px' }}>
+          <button className="button button-primary" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Main Dashboard ---
 export function Dashboard() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -415,6 +477,7 @@ export function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [modalTarget, setModalTarget] = useState<{ type: "class" | "group"; id: string } | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const fetchAll = async () => {
@@ -689,7 +752,10 @@ export function Dashboard() {
               <p className="subtitle">Student Dashboard</p>
             </div>
           </div>
-          <div className="button" onClick={handleLogout}>Logout</div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="button" onClick={() => setShowArchived(true)}>Restore</button>
+            <button className="button" onClick={handleLogout}>Logout</button>
+          </div>
         </nav>
 
         <div className="dashboard-content">
@@ -769,38 +835,21 @@ export function Dashboard() {
               </div>
             )}
           </div>
-
-          {/* Archived Tasks Section */}
-          {(classes.some(c => c.tasks.some(t => t.isHidden)) || groups.some(g => g.tasks?.some(t => t.isHidden))) && (
-            <div className="content-card" style={{ marginTop: '30px', background: 'rgba(255, 255, 255, 0.05)' }}>
-              <h3 className="content-card-title" style={{ padding: '20px 20px 0' }}>📦 Archived Tasks</h3>
-              <p className="content-card-meta" style={{ padding: '0 20px 15px' }}>Tasks you've hidden. You can restore them at any time.</p>
-              <div className="task-list" style={{ padding: '0 20px 20px' }}>
-                {classes.map(c => c.tasks.filter(t => t.isHidden).map(t => (
-                  <TaskItem 
-                    key={t._id} 
-                    task={t} 
-                    onToggle={() => toggleClassTask(c._id, t._id)} 
-                    onToggleHide={() => handleToggleHideTask(t._id)} 
-                  />
-                )))}
-                {groups.map(g => g.tasks?.filter(t => t.isHidden).map(t => (
-                  <TaskItem 
-                    key={t._id} 
-                    task={t} 
-                    onToggle={() => toggleGroupTask(g._id, t._id)} 
-                    onToggleHide={() => handleToggleHideTask(t._id)} 
-                  />
-                )))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
       <AddTaskModal open={modalOpen} onClose={() => setModalOpen(false)} onAdd={handleAddTask} />
       {toast && <div className="toast">{toast}</div>}
       <CreateGroupModal open={showCreateGroup} onClose={() => setShowCreateGroup(false)} onAdd={handleCreateGroup} classes={classes} />
+      <ArchivedTasksModal 
+        open={showArchived} 
+        onClose={() => setShowArchived(false)} 
+        classes={classes} 
+        groups={groups} 
+        onToggleTask={toggleClassTask}
+        onToggleGroupTask={toggleGroupTask}
+        onToggleHide={handleToggleHideTask}
+      />
     </div>
   );
 }
