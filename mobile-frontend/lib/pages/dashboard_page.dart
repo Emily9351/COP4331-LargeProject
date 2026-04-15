@@ -105,37 +105,47 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _fetchDatabaseStatus() async {
     final prefs  = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId') ?? '';
-    final authToken = prefs.getString('authToken') ?? '';
 
-    if (userId.isEmpty || authToken.isEmpty) {
+    debugPrint("🔍 DASHBOARD FETCH START for userId: $userId");
+
+    if (userId.isEmpty) {
+      debugPrint("❌ No userId found in SharedPreferences");
       setState(() => _loading = false);
       return;
     }
 
-    final headers = {'Authorization': 'Bearer $authToken'};
-
     try {
       // 1. Fetch classes for this student
-      final classRes = await http.get(Uri.parse('$_baseUrl/api/classes?userId=$userId'));
-      final classData = jsonDecode(classRes.body) as List;
+      final classUri = Uri.parse('$_baseUrl/api/classes?userId=$userId');
+      debugPrint("🌐 GET classes: $classUri");
+      final classRes = await http.get(classUri);
+      
+      if (classRes.statusCode != 200) {
+        debugPrint("❌ Class fetch failed: ${classRes.statusCode} ${classRes.body}");
+      }
 
-    
+      final classData = jsonDecode(classRes.body) as List;
+      debugPrint("📦 Received ${classData.length} classes");
+      
       final myClasses = classData.map((c) => ClassModel.fromJson(c)).toList();
 
       // 2. Fetch tasks for each class
       for (final cls in myClasses) {
-        final taskRes  = await http.get(
-          Uri.parse('$_baseUrl/api/tasks?userId=$userId&classId=${cls.id}&studyGroupId=null&isHidden=all'),
-          headers: headers,
-        );
+        final taskUri = Uri.parse('$_baseUrl/api/tasks?userId=$userId&classId=${cls.id}&studyGroupId=null&isHidden=all');
+        debugPrint("🌐 GET tasks for ${cls.courseCode}: $taskUri");
+        final taskRes  = await http.get(taskUri);
         final taskData = jsonDecode(taskRes.body) as List;
         cls.tasks      = taskData.map((t) => TaskModel.fromJson(t)).toList();
+        debugPrint("   ✅ Found ${cls.tasks.length} tasks");
       }
 
       // 3. Fetch user's groups
-      final groupRes  = await http.get(Uri.parse('$_baseUrl/api/groups?userId=$userId'), headers: headers);
+      final groupUri = Uri.parse('$_baseUrl/api/groups?userId=$userId');
+      debugPrint("🌐 GET groups: $groupUri");
+      final groupRes  = await http.get(groupUri);
       final groupData = jsonDecode(groupRes.body) as List;
       final myGroups  = groupData.map((g) => GroupModel.fromJson(g)).toList();
+      debugPrint("📦 Received ${myGroups.length} groups");
 
       setState(() {
         _classes = myClasses;
@@ -143,7 +153,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _loading = false;
       });
     } catch (e) {
-      debugPrint('Fetch error: $e');
+      debugPrint('❌ Fetch error: $e');
       setState(() => _loading = false);
     }
   }
@@ -222,17 +232,21 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStatsRow(),
-          const SizedBox(height: 24),
-          _buildTabs(),
-          const SizedBox(height: 12),
-          _activeTab == 'classes' ? _buildClassesTab() : _buildGroupsTab(),
-        ],
+    return RefreshIndicator(
+      onRefresh: _fetchDatabaseStatus,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStatsRow(),
+            const SizedBox(height: 24),
+            _buildTabs(),
+            const SizedBox(height: 12),
+            _activeTab == 'classes' ? _buildClassesTab() : _buildGroupsTab(),
+          ],
+        ),
       ),
     );
   }
