@@ -68,7 +68,12 @@ class GroupModel {
         id: j['_id'] ?? '',
         name: j['name'] ?? '',
         description: j['description'] ?? '',
-        memberIds: List<String>.from(j['memberIds'] ?? []),
+        memberIds: ((j['memberIds'] as List?) ?? [])
+            .map((member) => member is Map<String, dynamic>
+                ? (member['_id']?.toString() ?? '')
+                : member.toString())
+            .where((memberId) => memberId.isNotEmpty)
+            .toList(),
       );
 }
 
@@ -105,20 +110,23 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _fetchDatabaseStatus() async {
     final prefs  = await SharedPreferences.getInstance();
     final userId = prefs.getString('userId') ?? '';
+    final authToken = prefs.getString('authToken') ?? '';
 
     debugPrint("🔍 DASHBOARD FETCH START for userId: $userId");
 
-    if (userId.isEmpty) {
+    if (userId.isEmpty || authToken.isEmpty) {
       debugPrint("❌ No userId found in SharedPreferences");
       setState(() => _loading = false);
       return;
     }
 
+    final headers = {'Authorization': 'Bearer $authToken'};
+
     try {
       // 1. Fetch classes for this student
       final classUri = Uri.parse('$_baseUrl/api/classes?userId=$userId');
       debugPrint("🌐 GET classes: $classUri");
-      final classRes = await http.get(classUri);
+      final classRes = await http.get(classUri, headers: headers);
       
       if (classRes.statusCode != 200) {
         debugPrint("❌ Class fetch failed: ${classRes.statusCode} ${classRes.body}");
@@ -131,9 +139,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
       // 2. Fetch tasks for each class
       for (final cls in myClasses) {
-        final taskUri = Uri.parse('$_baseUrl/api/tasks?userId=$userId&classId=${cls.id}&studyGroupId=null&isHidden=all');
+        final taskUri = Uri.parse(
+          '$_baseUrl/api/tasks?userId=$userId&classId=${cls.id}&studyGroupId=null&isHidden=all',
+        );
         debugPrint("🌐 GET tasks for ${cls.courseCode}: $taskUri");
-        final taskRes  = await http.get(taskUri);
+        final taskRes  = await http.get(taskUri, headers: headers);
         final taskData = jsonDecode(taskRes.body) as List;
         cls.tasks      = taskData.map((t) => TaskModel.fromJson(t)).toList();
         debugPrint("   ✅ Found ${cls.tasks.length} tasks");
@@ -142,7 +152,7 @@ class _DashboardPageState extends State<DashboardPage> {
       // 3. Fetch user's groups
       final groupUri = Uri.parse('$_baseUrl/api/groups?userId=$userId');
       debugPrint("🌐 GET groups: $groupUri");
-      final groupRes  = await http.get(groupUri);
+      final groupRes  = await http.get(groupUri, headers: headers);
       final groupData = jsonDecode(groupRes.body) as List;
       final myGroups  = groupData.map((g) => GroupModel.fromJson(g)).toList();
       debugPrint("📦 Received ${myGroups.length} groups");
