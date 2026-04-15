@@ -48,9 +48,12 @@ class _LoginPageState extends State<LoginPage> {
         debugPrint("📦 FULL SERVER RESPONSE: ${response.body}");
         debugPrint("🔑 EXTRACTED USER ID: $uid");
 
-        // Save the ID locally
+        // Save the ID and token locally
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userId', uid);
+        if (data['token'] != null) {
+          await prefs.setString('authToken', data['token'].toString());
+        }
         await prefs.setString('authToken', data['token']?.toString() ?? '');
 
         // Navigate to Dashboard
