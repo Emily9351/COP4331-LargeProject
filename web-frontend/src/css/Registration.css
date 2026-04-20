@@ -4,7 +4,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px;
+    padding: 20px;
     background-size: cover;
     background-position: center;
     position: relative;
@@ -13,32 +13,33 @@
 .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.20);
+    background: rgba(0, 0, 0, 0.5);
 }
 
 .registration-card {
     width: 100%;
-    max-width: 25em;
-    background: rgba(255, 2090, 115 ,0.7);
-    backdrop-filter: blur(6px);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 28em;
+    background: rgba(0, 6, 22, 0.9);
+    border: 2px solid rgba(151, 184, 255, 0.3);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     position: relative;
     z-index: 1;
 }
 
 .registration-header {
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 32px;
 }
 
 .icon-box {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 10px;
-    background: linear-gradient(to bottom right, #2563eb, #4f46e5);
-    border-radius: 16px;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 16px;
+    background: transparent;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -46,24 +47,32 @@
 
 .icon {
     color: white;
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
 }
 
 .registration-header h1 {
-    font-size: 24px;
-    margin: 8px 0;
-    color: crimson;
+    font-size: 28px;
+    margin: 12px 0 8px 0;
+    color: #ffffff;
+    font-weight: 700;
 }
 
 .registration-header p {
-    color: darkblue;
-    font-size: 16px;
-    font-weight: 600;
+    color: rgba(139, 149, 206, 1);
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0;
 }
 
 .registration-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.input-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -71,70 +80,88 @@
 
 .input-group label {
     font-size: 14px;
-    font-weight: 500;
-    color: darkblue;
-
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 4px;
 }
 
 .input-wrapper {
     position: relative;
-    width: 22.5em;
+    width: 100%;
 }
 
 .input-icon {
     position: absolute;
-    left: 10px;
-    top: 10px;
-    width: 16px;
-    height: 16px;
-    color: #aaa;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: rgba(151, 184, 255, 0.7);
+    pointer-events: none;
 }
 
 .input-wrapper input {
     width: 100%;
-    padding: 10px 10px 10px 34px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    padding: 12px 14px 12px 44px;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 0;
     outline: none;
-    color: black;
-    background-color: white;
+    color: #ffffff;
+    background-color: transparent;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
 .input-wrapper input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    border-bottom-color: rgba(151, 184, 255, 1);
+    box-shadow: none;
 }
 
 .registration-button {
-    padding: 10px;
+    padding: 14px 20px;
     border: none;
-    border-radius: 6px;
-    color: white;
-    background: linear-gradient(to left, #dc143c, #dc143c);
+    border-radius: 10px;
+    color: rgba(0, 9, 88, 1);
+    background: #ffffff;
     cursor: pointer;
-    transition: 0.3s;
-    margin-top: 10px;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
 }
 
 .registration-button:hover {
-    background: linear-gradient(to left, #dc143c, #dc143c);
+    background: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
+}
+
+.registration-button:active {
+    transform: translateY(0);
 }
 
 .footer-text {
     font-weight: 500;
     text-align: center;
     font-size: 14px;
-    margin-top: 10px;
-    color: black;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .footer-text a {
-    color: crimson;
+    color: #ffffff;
     text-decoration: none;
-    font-weight: 600;
-
+    font-weight: 700;
+    transition: color 0.2s ease;
 }
 
 .footer-text a:hover {
+    color: rgba(151, 184, 255, 1);
     text-decoration: underline;
 }

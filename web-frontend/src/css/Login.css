@@ -7,7 +7,7 @@ html, body {
 
 .login-page {
     position: relative;
-    background-color: yellow;
+    background-color: #ffd700;
     background-image: url('../assets/UpBackground.png');
     display: flex;
     align-items: center;
@@ -22,35 +22,36 @@ html, body {
 .overlay {
     position: absolute;
     inset: 0; 
-    background: rgba(0,0,0,0.5); 
+    background: rgba(0, 0, 0, 0.5); 
     z-index: 1;
 }
 
 .login-card {
     position: relative;
     z-index: 2;
-    background: rgba(255,2090,115,0.7); 
-    border-radius: 16px;
-    backdrop-filter: blur(6px);
-    padding: 2rem;
+    background: rgba(0, 6, 22, 0.9); 
+    border: 2px solid rgba(151, 184, 255, 0.3);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    padding: 2.5rem;
     width: 100%;
-    max-width: 25em;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    max-width: 28em;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 
 
 .login-header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 32px;
 }
 
 .icon-box {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 10px;
-    background: linear-gradient(to bottom right, #2563eb, #4f46e5);
-    border-radius: 16px;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 16px;
+    background: transparent;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -58,95 +59,168 @@ html, body {
 
 .icon {
     color: white;
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
 }
 
 .login-header h1 {
-    font-size: 24px;
-    margin: 8px 0;
-    color: crimson;
+    font-size: 28px;
+    margin: 12px 0 8px 0;
+    color: #ffffff;
+    font-weight: 700;
 }
 
 .login-header p {
-    color: darkblue;
-    font-size: 16px;
-    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0;
 }
 
 .login-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .input-group label {
     font-size: 14px;
-    font-weight: 500;
-    color: darkblue;
-
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 4px;
 }
 
 .input-wrapper {
     position: relative;
-    width: 22.5em;
+    width: 100%;
 }
 
 .input-icon {
     position: absolute;
-    left: 10px;
-    top: 10px;
-    width: 16px;
-    height: 16px;
-    color: #aaa;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: rgba(151, 184, 255, 0.7);
+    pointer-events: none;
 }
 
 .input-wrapper input {
     width: 100%;
-    padding: 10px 10px 10px 34px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    padding: 12px 14px 12px 44px;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 0;
     outline: none;
-    color: black;
-    background-color: white;
+    color: #ffffff;
+    background-color: transparent;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
 .input-wrapper input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    border-bottom-color: rgba(151, 184, 255, 1);
+    box-shadow: none;
 }
 
 .login-button {
-    padding: 10px;
+    padding: 14px 20px;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     color: white;
-    background: linear-gradient(to left, #dc143c, #dc143c);
+    background: #2196F3;
     cursor: pointer;
-    transition: 0.3s;
+    transition: all 0.3s ease;
+    font-weight: 700;
+    font-size: 16px;
+    margin-top: 8px;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
 }
 
 .login-button:hover {
-    background: linear-gradient(to left, #dc143c, #dc143c);
+    background: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+}
+
+.login-button:active {
+    transform: translateY(0);
+}
+
+.login-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.forgot-password-link {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 12px;
+}
+
+.forgot-password-link a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.forgot-password-link a:hover {
+    color: rgba(151, 184, 255, 1);
+    text-decoration: underline;
+}
+
+.error-text {
+    color: #dc2626;
+    font-size: 14px;
+    text-align: center;
+    margin: 8px 0 0 0;
+    padding: 10px;
+    background: rgba(220, 38, 38, 0.1);
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.success-text {
+    color: #16a34a;
+    font-size: 14px;
+    text-align: center;
+    margin: 8px 0 0 0;
+    padding: 10px;
+    background: rgba(22, 163, 74, 0.1);
+    border-radius: 8px;
+    font-weight: 500;
 }
 
 .footer-text {
     font-weight: 500;
     text-align: center;
     font-size: 14px;
-    margin-top: 16px;
-    color: black;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .footer-text a {
-    color: crimson;
+    color: #ffffff;
     text-decoration: none;
-    font-weight: 600;
-
+    font-weight: 700;
+    transition: color 0.2s ease;
 }
 
 .footer-text a:hover {
+    color: rgba(151, 184, 255, 1);
     text-decoration: underline;
 }
 

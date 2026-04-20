@@ -30,6 +30,12 @@ const UserSchema = new mongoose.Schema(
         ref: "Class",
       },
     ],
+    hiddenClasses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Class",
+      },
+    ],
     profilePictureUrl: {
       type: String,
       default: "",
@@ -42,6 +48,12 @@ const UserSchema = new mongoose.Schema(
       type: String,
     },
     verificationCodeExpires: {
+      type: Date,
+    },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
       type: Date,
     },
   },

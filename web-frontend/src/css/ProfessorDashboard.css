@@ -1,0 +1,332 @@
+/* ================= GLOBAL ================= */
+
+.dashboard-page {
+    min-height: 100vh;
+    width: 100%;
+    background: #ffd700;
+    color: #1a202c;
+    font-family: Arial, Helvetica, sans-serif;
+    background-image: url('../assets/UpBackground.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.overlay {
+    min-height: 100vh;
+    padding: 30px;
+    background: rgba(30, 58, 138, 0.3);
+}
+
+/* ================= NAVBAR ================= */
+
+.dashboard-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 2rem;
+    background: #ffffff;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 2px solid #718096;
+}
+
+.dashboard-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
+}
+
+.name {
+    font-weight: 700;
+    font-size: 20px;
+    color: #1a202c;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+/* ================= BUTTONS ================= */
+
+.button {
+    background: #ffffff;
+    color: #1a202c;
+    border: 2px solid #718096;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.button:hover {
+    background: #ffc107;
+    border-color: #1e3a8a;
+    transform: translateY(-1px);
+}
+
+.button-primary {
+    background: #1e3a8a;
+    color: white;
+    border: 2px solid #1e3a8a;
+    box-shadow: 0 2px 8px rgba(30, 58, 138, 0.25);
+}
+
+.button-primary:hover {
+    background: #1e40af;
+    border-color: #1e40af;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.35);
+}
+
+/* ================= CARDS ================= */
+
+.dashboard-content {
+    display: grid;
+    gap: 30px;
+}
+
+.card {
+    background: #fff8ac;
+    padding: 1.75rem;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    border: 2px solid #718096;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.house-card, .badge-card {
+    width: 80vw;
+    margin: auto;
+    background-color:  fff8ac;
+}
+
+.content-card {
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 12px;
+    margin-top: 16px;
+    border: 2px solid #718096;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.content-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.content-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.content-card-title {
+    font-weight: 700;
+    color: #1a202c;
+    font-size: 1.1rem;
+}
+
+.content-card-meta {
+    font-size: 13px;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+/* ================= INPUTS ================= */
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px 14px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 2px solid #718096;
+    background: #ffffff;
+    color: #1a202c;
+    outline: none;
+    box-sizing: border-box;
+    font-size: 15px;
+    transition: all 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #1e3a8a;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
+}
+
+/* ================= CHECKBOX CONTAINER ================= */
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+    padding: 12px;
+    background: rgba(30, 58, 138, 0.1);
+    border-radius: 8px;
+    border: 2px solid #1e3a8a;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: auto;
+    height: 20px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #1e3a8a;
+}
+
+.checkbox-container label {
+    font-size: 0.95rem;
+    color: #1e3a8a;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0;
+    user-select: none;
+}
+
+/* ================= TASK / LIST ITEMS ================= */
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f9ff;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 8px;
+    border: 1px solid #e0f2fe;
+}
+
+/* ================= MODAL ================= */
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    background: #f0f9ff;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px;
+    border: 1px solid #bae6fd;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-title {
+    margin-bottom: 12px;
+    color: #0c4a6e;
+    font-weight: 700;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+/* ================= DROPDOWN ================= */
+
+.searchable-dropdown {
+    position: relative;
+    margin-top: 10px;
+}
+
+.dropdown-trigger {
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #bae6fd;
+}
+
+.dropdown-menu {
+    position: absolute;
+    width: 100%;
+    background: #ffffff;
+    border-radius: 8px;
+    margin-top: 6px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1010;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid #bae6fd;
+}
+
+.dropdown-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    border-bottom: 1px solid #e0f2fe;
+}
+
+.dropdown-search input {
+    margin: 0;
+}
+
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #4b5563;
+}
+
+.dropdown-item:hover {
+    background: #f0f9ff;
+    color: #0c4a6e;
+}
+
+.dropdown-item.selected {
+    background: #2563eb;
+    color: white;
+}
+
+.dropdown-loading,
+.dropdown-empty {
+    padding: 10px;
+    color: #64748b;
+}
+
+/* ================= ICON HELPERS ================= */
+
+.icon {
+    display: inline-flex;
+}

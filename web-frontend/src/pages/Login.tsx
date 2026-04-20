@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import UpIcon from "../assets/UpIcon.png";
 import "../css/Login.css";
+import { setAuthSession } from "../lib/auth";
 
 export function Login() {
     const navigate = useNavigate();
@@ -29,10 +30,23 @@ export function Login() {
             }
 
             const data = await response.json();
-            console.log("Login successful", data);
 
-            // Redirect to dashboard
-            navigate("/dashboard");
+            setAuthSession(data.token, {
+                userId: data.userId,
+                role: data.role,
+                name: data.name,
+                email: data.user?.email,
+            });
+
+            console.log("Login successful", data);
+            console.log("LOGIN DATA:", data);
+
+            if (data.role === "professor") {
+                navigate("/professor-dashboard");
+            } else {
+                navigate("/dashboard"); 
+            }
+
         } catch (err) {
             console.error("Login error:", err);
             setError("Server unreachable or network error");
@@ -46,7 +60,7 @@ export function Login() {
             <div className="login-card">
                 <div className="login-header">
                     <div className="icon-box">
-                        <img src={UpIcon} alt="Up Icon" className="icon" />
+                        <img src={UpIcon} alt="Up Icon" className="icon" width="100" height="100" loading="lazy" decoding="async" />
                     </div>
                     <h1>Adventure Awaits</h1>
                     <p>Reach New Heights One Task at a Time</p>
@@ -88,6 +102,10 @@ export function Login() {
                     <button type="submit" className="login-button">
                         Sign In
                     </button>
+
+                    <p className="forgot-password-link">
+                        <a href="/forgot-password">Forgot password?</a>
+                    </p>
                 </form>
 
                 <p className="footer-text">

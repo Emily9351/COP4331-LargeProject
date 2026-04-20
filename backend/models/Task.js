@@ -15,11 +15,25 @@ const TaskSchema = new mongoose.Schema(
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: false, // Changed to false to allow master tasks
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
+    },
+    isMaster: {
+      type: Boolean,
+      default: false,
     },
     classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
+      default: null,
+    },
+    studyGroupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StudyGroup",
       default: null,
     },
     // Optionally, we can link this task to an event
@@ -41,6 +55,10 @@ const TaskSchema = new mongoose.Schema(
       type: String,
       enum: ["todo", "in_progress", "done"],
       default: "todo",
+    },
+    isHidden: {
+      type: Boolean,
+      default: false,
     },
     tags: [
       {
